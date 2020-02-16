@@ -1,0 +1,32 @@
+jooq {
+    postgres(sourceSets.main) {
+        jdbc {
+            driver = 'org.postgresql.Driver'
+            url = 'jdbc:postgresql://localhost:6432/flashcards'
+            user = 'flashcards'
+            password = 'flashcards'
+        }
+        generator {
+            name = 'org.jooq.codegen.DefaultGenerator'
+            strategy {
+                name = 'org.jooq.codegen.DefaultGeneratorStrategy'
+            }
+            database {
+                name = 'org.jooq.meta.postgres.PostgresDatabase'
+                inputSchema = 'public'
+                includes = ".*"
+                excludes = "flyway_schema_history"
+            }
+            generate {
+                relations = true
+                deprecated = false
+                records = true
+                //immutablePojos = true
+                fluentSetters = false
+            }
+            target {
+                packageName = 'flashcards.db.jooq'
+            }
+        }
+    }
+}

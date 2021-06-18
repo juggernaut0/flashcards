@@ -1,15 +1,14 @@
 plugins {
-    kotlin("jvm") version "1.3.61" apply false
+    kotlin("jvm") version "1.5.10" apply false
+    kotlin("plugin.serialization") version "1.5.10" apply false
 }
 
 subprojects {
-    version = "1-SNAPSHOT"
+    version = "1"
 
     repositories {
         mavenLocal()
-        maven("https://kotlin.bintray.com/kotlinx")
         mavenCentral()
-        jcenter()
         maven("https://juggernaut0.github.io/m2/repository")
     }
 }

@@ -2,35 +2,35 @@ import org.jetbrains.kotlin.gradle.tasks.Kotlin2JsCompile
 
 plugins {
     kotlin("multiplatform")
-    kotlin("plugin.serialization").version("1.3.61")
+    kotlin("plugin.serialization")
 }
 
 kotlin {
     jvm()
-    js()
+    js {
+        browser()
+    }
 
     sourceSets {
-        val multiplatformUtilsVersion = "0.2.0"
-        val serializationVersion = "0.14.0"
+        all {
+            languageSettings {
+                useExperimentalAnnotation("kotlin.RequiresOptIn")
+            }
+        }
+
+        val multiplatformUtilsVersion = "0.6.3-graphql-SNAPSHOT"
 
         val commonMain by getting {
             dependencies {
                 api("com.github.juggernaut0:multiplatform-utils:$multiplatformUtilsVersion")
-                api("org.jetbrains.kotlinx:kotlinx-serialization-runtime-common:$serializationVersion")
+                api("com.github.juggernaut0:multiplatform-utils-graphql:$multiplatformUtilsVersion")
+                api("org.jetbrains.kotlinx:kotlinx-datetime:0.2.1")
             }
         }
 
         val jvmMain by getting {
             dependencies {
-                api("com.github.juggernaut0:multiplatform-utils-jvm:$multiplatformUtilsVersion")
-                api("org.jetbrains.kotlinx:kotlinx-serialization-runtime:$serializationVersion")
-            }
-        }
-
-        val jsMain by getting {
-            dependencies {
-                api("com.github.juggernaut0:multiplatform-utils-js:$multiplatformUtilsVersion")
-                api("org.jetbrains.kotlinx:kotlinx-serialization-runtime-js:$serializationVersion")
+                api("com.github.juggernaut0:multiplatform-utils-ktor-jvm:$multiplatformUtilsVersion")
             }
         }
     }

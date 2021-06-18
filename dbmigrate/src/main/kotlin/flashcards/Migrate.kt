@@ -1,3 +1,5 @@
+package flashcards
+
 import org.flywaydb.core.Flyway
 import java.net.URI
 

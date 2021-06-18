@@ -6,32 +6,37 @@ plugins {
     kotlin("jvm")
     java
     application
-    id("nu.studer.jooq").version("4.1")
+    id("nu.studer.jooq").version("5.2.1")
     kotlin("kapt")
     id("com.bmuschko.docker-remote-api") version "6.1.3"
+    kotlin("plugin.serialization")
 }
 
 dependencies {
     implementation(project(":common"))
+    implementation(project(":dbmigrate"))
 
     implementation(kotlin("stdlib-jdk8"))
 
-    implementation("io.javalin:javalin:3.7.0")
+    val ktorVersion = "1.6.0"
+    implementation("io.ktor:ktor-server-core:$ktorVersion")
+    implementation("io.ktor:ktor-server-jetty:$ktorVersion")
+    implementation("io.ktor:ktor-client-apache:$ktorVersion")
 
-    val daggerVersion = "2.25.4"
+    val daggerVersion = "2.36"
     implementation("com.google.dagger:dagger:$daggerVersion")
     kapt("com.google.dagger:dagger-compiler:$daggerVersion")
 
     implementation("ch.qos.logback:logback-classic:1.2.3")
 
     implementation("org.postgresql:postgresql:42.2.5")
-    implementation("org.jooq:jooq:3.12.3")
-    jooqRuntime("org.postgresql:postgresql:42.2.5")
+    implementation("org.jooq:jooq:3.14.11")
+    jooqGenerator("org.postgresql:postgresql:42.2.5")
     implementation("com.zaxxer:HikariCP:3.2.0")
 
-    implementation("io.github.config4k:config4k:0.4.1")
+    implementation("io.github.config4k:config4k:0.4.2")
 
-    implementation("dev.twarner.auth:auth-common:1")
+    implementation("dev.twarner.auth:auth-common:3")
 
     testImplementation(kotlin("test-junit"))
 }
@@ -40,24 +45,57 @@ application {
     mainClassName = "flashcards.MainKt"
 }
 
-apply {
-    from("jooq.gradle")
+jooq {
+    configurations {
+        create("main") {
+            generateSchemaSourceOnCompilation.set(true)
+            jooqConfiguration.apply {
+                jdbc.apply {
+                    driver = "org.postgresql.Driver"
+                    url = "jdbc:postgresql://localhost:6432/flashcards"
+                    user = "flashcards"
+                    password = "flashcards"
+                }
+                generator.apply {
+                    name = "org.jooq.codegen.DefaultGenerator"
+                    strategy.apply {
+                        name = "org.jooq.codegen.DefaultGeneratorStrategy"
+                    }
+                    database.apply {
+                        name = "org.jooq.meta.postgres.PostgresDatabase"
+                        inputSchema = "public"
+                        includes = ".*"
+                        excludes = "flyway_schema_history"
+                    }
+                    generate.apply {
+                        isRelations = true
+                        isDeprecated = false
+                        isRecords = true
+                        isFluentSetters = false
+                    }
+                    target.apply {
+                        packageName = "flashcards.db.jooq"
+                        directory = "build/generated/source/jooq/main"
+                    }
+                }
+            }
+        }
+    }
 }
 
 tasks {
     withType<KotlinCompile> {
         kotlinOptions.jvmTarget = "1.8"
-        dependsOn("generatePostgresJooqSchemaSource")
     }
 
     val copyWeb by registering(Copy::class) {
         if (version.toString().endsWith("SNAPSHOT")) {
-            dependsOn(":web:webpack")
+            dependsOn(":web:browserDevelopmentWebpack")
         } else {
-            dependsOn(":web:webpackMin")
+            dependsOn(":web:browserProductionWebpack")
         }
         group = "build"
-        from("${project(":web").buildDir}/webpack")
+        from("${project(":web").buildDir}/distributions")
         into("$buildDir/resources/main/static/js")
     }
 

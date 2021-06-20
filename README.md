@@ -15,11 +15,6 @@
 ## TODO
 
 * Features
-  * QoL: Custom card editor
-    * Floating save button
-    * Warning when unsaved changes
-    * Confirmation message when saving changes
-    * Synonyms input
   * Add Lesson screen
     * Custom card source: stage 0 cards should go to lessons, not reviews
   * Review screen: session progress (completed/total)

@@ -4,6 +4,7 @@ package components
 
 import FlashcardsService
 import asynclite.async
+import asynclite.delay
 import flashcards.api.v1.CardSourceRequest
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -19,17 +20,25 @@ import multiplatform.graphql.GraphQLVariable
 class SourceEditor(private val service: FlashcardsService, private val sourceId: UUID) : Component() {
     private var source: CardSource? = null
     private lateinit var inner: Contents
+    private var dirty = false
+    private var saved = false
 
     init {
         async {
             val source = service.query(Query.serializer(), "id" to sourceId).source
             inner = when(source) {
-                is CardSource.CustomCardSource -> CustomSourceEditor(source)
+                is CardSource.CustomCardSource -> CustomSourceEditor(source, ::makeDirty)
                 is CardSource.WanikaniCardSource -> WanikaniSourceEditor(service, source)
             }
             this.source = source
             render()
         }
+    }
+
+    private fun makeDirty() {
+        if (dirty) return
+        dirty = true
+        render()
     }
 
     private fun delete() {
@@ -41,6 +50,12 @@ class SourceEditor(private val service: FlashcardsService, private val sourceId:
     private fun save() {
         async {
             service.updateSource(sourceId, inner.toRequest())
+            saved = true
+            dirty = false
+            render()
+            delay(5000)
+            saved = false
+            render()
         }
     }
 
@@ -51,10 +66,18 @@ class SourceEditor(private val service: FlashcardsService, private val sourceId:
                 p { +"Loading..." }
             } else {
                 component(Header(service))
-                h2 { +source.name }
-                div(classes("row")) {
-                    button(Props(classes = listOf("button-confirm"), click = ::save)) { +"Save" }
-                    button(Props(classes = listOf("button-delete"), click = ::delete)) { +"Delete" }
+                div(classes("sticky-top", "solid-row")) {
+                    h2 { +source.name }
+                    div(classes("gapped-row")) {
+                        button(Props(classes = listOf("button-confirm"), click = ::save)) { +"Save" }
+                        button(Props(classes = listOf("button-delete"), click = ::delete)) { +"Delete" }
+                        val msg = when {
+                            dirty -> "You have unsaved changes."
+                            saved -> "Changes saved."
+                            else -> ""
+                        }
+                        span { +msg }
+                    }
                 }
                 component(inner)
             }

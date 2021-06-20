@@ -28,7 +28,7 @@ class Dashboard(private val service: FlashcardsService) : Component() {
                 markup().div {
                     label {
                         +"Name"
-                        inputText(model = ::name)
+                        inputText(classes("form-input"), model = ::name)
                     }
                 }
             }

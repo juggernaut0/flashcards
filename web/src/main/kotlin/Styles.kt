@@ -37,7 +37,7 @@ body {
     box-sizing: border-box;
     border: 1px solid $borderGray;
     background-color: #f7f7f7;
-    overflow: hidden;
+    overflow: clip;
     padding: 0.5rem;
     margin: 0.5rem;
 }
@@ -83,6 +83,7 @@ body {
 
 .buttons {
     display: flex;
+    flex-wrap: wrap;
 }
 
 .dash-tile {
@@ -91,9 +92,10 @@ body {
     background-color: white;
     border: 1px solid $borderGray;
     border-radius: 0.25rem;
-    margin: 0 0.25rem;
+    margin: 0.25rem;
     padding: 0;
     overflow: hidden;
+    height: 5.5rem;
 }
 
 .dash-tile:hover {
@@ -103,7 +105,6 @@ body {
 .dash-tile-add {
     color: #999;
     text-align: center;
-    height: 5.5rem;
     font-size: 36pt;
 }
 
@@ -191,6 +192,24 @@ body {
 
 .error-alert {
     color: $btnDangerColor;
+}
+
+.sticky-top {
+    position: -webkit-sticky;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.solid-row {
+    background-color: #f7f7f7;
+    flex-basis: 100%;
+}
+
+.gapped-row {
+    display: flex;
+    gap: 0.25rem;
+    align-items: center;
 }
 
 .card-group {
@@ -289,8 +308,13 @@ div,button {
     box-sizing: border-box;
 }
 
-input:not([type=checkbox]),textarea {
+.form-input {
     width: 100%;
+    border: 1px solid $borderGray;
+    border-radius: 0.25rem;
+    font-size: 1rem;
+    padding: 0.25rem 0.5rem;
+    margin-top: 0.4rem;
 }
 
 h2,h3 {
@@ -352,6 +376,7 @@ label {
     border: 0;
     border-top: 1px solid $borderGray;
     border-bottom: 1px solid $borderGray;
+    width: 100%;
 }
 
 .review-input:focus {
@@ -476,6 +501,7 @@ private const val modalCss = """
     display: none;
     justify-content: center;
     align-items: center;
+    z-index: 1000;
 }
 .modal-box {
     background-color: white;
@@ -528,9 +554,64 @@ private const val modalCss = """
 }
 """
 
+private const val tagInputCss = """
+.taginput {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    box-sizing: border-box;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid $borderGray;
+    border-radius: 0.25rem;
+    margin-top: 0.4rem;
+    background-color: #fff;
+    cursor: text;
+}
+
+.taginput-tag {
+    padding-left: 0.25rem;
+    background-color: $btnColor;
+    color: #fff;
+    border-radius: 0.25rem;
+    margin: 0.25rem 0;
+    margin-right: 0.5rem;
+    cursor: default;
+    font-size: 15px;
+}
+
+.taginput-tag-close {
+    display: inline;
+    border: 0;
+    background-color: inherit;
+    color: inherit;
+    font-size: inherit;
+    padding: 0.25rem;
+    border-radius: 0 0.25rem 0.25rem 0;
+    margin-left: 0.25rem;
+}
+
+.taginput-tag-close:hover {
+    background-color: $btnHoverColor;
+}
+
+input.taginput-input {
+    border: 0;
+    line-height: 2;
+    font-size: 1rem;
+    flex-grow: 1;
+    width: unset;
+    order: 1;
+}
+
+.taginput-input:focus {
+    outline: none;
+}
+"""
+
 fun applyStyles() {
     appendCss(css)
     appendCss(modalCss)
+    appendCss(tagInputCss)
 }
 
 private fun appendCss(css: String) {

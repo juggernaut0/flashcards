@@ -9,7 +9,7 @@ import components.SourceEditor.CardSource
 import flashcards.api.v1.Card
 import flashcards.api.v1.CustomCardSourceRequest
 
-class CustomSourceEditor(source: CardSource.CustomCardSource) : SourceEditor.Contents() {
+class CustomSourceEditor(source: CardSource.CustomCardSource, private val makeDirty: () -> Unit) : SourceEditor.Contents() {
     private var showBacks by renderOnSet(false)
     private val groups = source.groups.mapTo(mutableListOf()) {
         CardGroupView(
@@ -28,6 +28,7 @@ class CustomSourceEditor(source: CardSource.CustomCardSource) : SourceEditor.Con
     private fun addGroup() {
         groups.add(CardGroupView(iid = iidSeq))
         iidSeq += 1
+        makeDirty()
         render()
     }
 
@@ -54,12 +55,14 @@ class CustomSourceEditor(source: CardSource.CustomCardSource) : SourceEditor.Con
             val contents = CardModalContents()
             Modal.show("Add Card", contents) {
                 cards.add(contents.toCard())
+                makeDirty()
                 render()
             }
         }
 
         private fun removeCard(i: Int) {
             cards.removeAt(i)
+            makeDirty()
             if (cards.isEmpty()) {
                 groups.remove(this)
                 this@CustomSourceEditor.render()
@@ -72,6 +75,7 @@ class CustomSourceEditor(source: CardSource.CustomCardSource) : SourceEditor.Con
             val contents = CardModalContents(card)
             Modal.show("Edit Card", contents) {
                 cards[i] = contents.toCard()
+                makeDirty()
                 render()
             }
         }
@@ -98,25 +102,30 @@ class CustomSourceEditor(source: CardSource.CustomCardSource) : SourceEditor.Con
         var front = card?.front ?: ""
         var back = card?.back ?: ""
         var prompt = card?.prompt ?: ""
+        val synonyms = card?.synonyms.orEmpty().toMutableList()
         var notes = card?.notes ?: ""
 
         override fun render() {
             markup().div {
                 label {
                     +"Front"
-                    inputText(model = ::front)
+                    inputText(classes("form-input"), model = ::front)
                 }
                 label {
                     +"Back"
-                    inputText(model = ::back)
+                    inputText(classes("form-input"), model = ::back)
                 }
                 label {
                     +"Prompt"
-                    inputText(model = ::prompt)
+                    inputText(classes("form-input"), model = ::prompt)
+                }
+                label {
+                    +"Synonyms"
+                    component(TagInput(synonyms))
                 }
                 label {
                     +"Notes"
-                    textarea(model = ::notes)
+                    textarea(classes("form-input"), model = ::notes)
                 }
             }
         }
@@ -126,6 +135,7 @@ class CustomSourceEditor(source: CardSource.CustomCardSource) : SourceEditor.Con
                 front = front,
                 back = back,
                 prompt = prompt.takeIf { it.isNotBlank() },
+                synonyms = synonyms,
                 notes = notes.takeIf { it.isNotBlank() },
             )
         }

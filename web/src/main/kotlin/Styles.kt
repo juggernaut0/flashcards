@@ -21,6 +21,8 @@ private const val btnLightColor = "#eee"
 private const val btnLightHoverColor = "#ddd"
 private const val linkColor = "#444"
 private const val linkHoverColor = "#222"
+private const val lessonColor = "red"
+private const val reviewColor = "#17b"
 
 private const val css = """
 body {
@@ -127,12 +129,12 @@ body {
 }
 
 .indicator-lessons {
-    background-color: red;
+    background-color: $lessonColor;
     color: white;
 }
 
 .indicator-reviews {
-    background-color: blue;
+    background-color: $reviewColor;
     color: white;
 }
 
@@ -267,7 +269,6 @@ body {
     border-top-left-radius: 0.25rem;
     border-bottom-left-radius: 0.25rem;
     padding: 0.25rem;
-    height: 100%;
     min-width: 10rem;
 }
 
@@ -276,7 +277,6 @@ body {
     border: 1px solid $borderGray;
     border-top-right-radius: 0.25rem;
     border-bottom-right-radius: 0.25rem;
-    line-height: 1.5rem;
     text-align: center;
     padding: 0.25rem;
 }
@@ -418,6 +418,50 @@ label {
 
 .review-summary-incorrect:before {
     content: "× "
+}
+
+.start-lesson-button {
+    line-height: 5rem;
+    width: 12rem;
+    color: $lessonColor;
+    background-color: white;
+    border: 1px solid $lessonColor;
+}
+
+.start-lesson-button:hover:enabled {
+    color: white;
+    background-color: $lessonColor;
+}
+
+.start-lesson-button:disabled {
+    color: $borderGray;
+    border-color: $borderGray;
+}
+
+.start-review-button {
+    line-height: 5rem;
+    width: 12rem;
+    color: $reviewColor;
+    background-color: white;
+    border: 1px solid $reviewColor;
+    margin-left: 0.5rem;
+}
+
+.start-review-button:hover:enabled {
+    color: white;
+    background-color: $reviewColor;
+}
+
+.start-review-button:disabled {
+    color: $borderGray;
+    border-color: $borderGray;
+}
+
+.review-notes-panel {
+    margin: 0 0.5rem;
+    margin-top: -1px;
+    border: 1px solid $borderGray;
+    padding: 0.5rem;
 }
 """
 

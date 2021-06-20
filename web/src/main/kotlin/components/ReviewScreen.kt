@@ -209,6 +209,7 @@ class ReviewScreen(private val service: FlashcardsService, private val deckId: U
             item.timesIncorrect -= 1
         }
         inputState = InputState.WAITING
+        notesShown = false
         render()
         setInputFocus()
     }
@@ -292,9 +293,14 @@ class ReviewScreen(private val service: FlashcardsService, private val deckId: U
                     )) { +">" }
                 }
                 if (notesShown) {
-                    div(Props(classes = listOf("review-notes"), keyup = { handleSpecialKey(it, item) })) {
-                        pre {
-                            +"Correct answer: ${item.card.back}\n\n${item.card.notes.orEmpty()}"
+                    div(Props(classes = listOf("review-notes-panel"), keyup = { handleSpecialKey(it, item) })) {
+                        h5 { +"Correct answer: ${item.card.back}" }
+                        hr()
+                        val notes = item.card.notes
+                        if (notes != null) {
+                            pre {
+                                +notes
+                            }
                         }
                     }
                 }

@@ -36,8 +36,8 @@ object Modal : Component() {
 
     override fun render() {
         val cls = if (showing) listOf("modal-background", "modal-show") else listOf("modal-background")
-        markup().div(Props(classes = cls, click = { close() })) {
-            div(classes("modal-box").copy(click = {})) {
+        markup().div(Props(classes = cls, mousedown = { close() })) {
+            div(classes("modal-box").copy(mousedown = {})) {
                 h3 { +title }
                 body?.also { component(it) }
                 div(classes("modal-btns")) {

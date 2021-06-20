@@ -15,22 +15,26 @@
 ## TODO
 
 * Features
-  * Finish styling & cleaning rough edges in UI
-    * Deck overview buttons
-    * Review screen notes panel
-  * QoL: Custom card editor: Warning when unsaved changes, confirmation when saving changes
-  * Custom card editor: Synonyms input
-  * **WaniKani support**
+  * QoL: Custom card editor
+    * Floating save button
+    * Warning when unsaved changes
+    * Confirmation message when saving changes
+    * Synonyms input
   * Add Lesson screen
+    * Custom card source: stage 0 cards should go to lessons, not reviews
+  * Review screen: session progress (completed/total)
+  * **WaniKani support**
   * Blocklist and closelist support in reviews
     * Blocklist: Hidden list of inputs that are rejected, even if close to an answer
     * closelist: Hidden list of inputs that are close but not correct, e.g. reading for a meaning card
   * QoL: Make custom card editor easier to create a large amount of cards
     * Maybe JSON/CSV import?
   * Deck overview screen: Review Forecast
+  * Review screen: Wrap up
   * View SRS stages on custom card editor
   * QoL: Add synonyms from review screen details foldout
   * Implement source and deck deletion
+  * Change screen transitions to not blink (no loading text until 500ms have passed)
 * Bugs
   * History: Reloading the page doesn't clear history, so need to handle or prevent going 
     "back" from first page

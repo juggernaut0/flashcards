@@ -24,7 +24,7 @@ class TagInput(private val tags: MutableList<String>, private val onChange: (() 
     private fun onKeyUp(eventArgs: KeyboardEventArgs) {
         if (eventArgs.key == "Enter") {
             addTag()
-        } else if(eventArgs.key == "Backspace" && newValue.isEmpty()) {
+        } else if(eventArgs.key == "Backspace" && newValue.isEmpty() && tags.isNotEmpty()) {
             tags.removeAt(tags.lastIndex)
             render()
             onChange?.invoke()

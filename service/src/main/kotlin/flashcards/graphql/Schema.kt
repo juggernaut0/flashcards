@@ -24,7 +24,7 @@ data class CardGroup(val cards: List<Card>, val iid: Int, val srsStage: Int, val
 typealias Card = flashcards.api.v1.Card
 
 @Serializable
-class Deck(val id: UUID, val name: String, @Transient val sources: List<UUID> = emptyList())
+class Deck(val id: UUID, val name: String, val sourceIds: List<UUID> = emptyList())
 
 @Serializable
 class ReviewItem(val sourceId: UUID, val cardGroup: CardGroup)

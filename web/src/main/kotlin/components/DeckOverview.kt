@@ -63,6 +63,7 @@ class DeckOverview(private val service: FlashcardsService, private val deckId: U
                 h2 { +deck.name }
                 button(Props(
                     classes = listOf("start-lesson-button"),
+                    click = { FlashcardsApp.pushState(LessonScreen(service, deckId)) },
                     disabled = deck.lessons == 0,
                 )) { +if(deck.lessons == 0) "No lessons available" else "Start ${deck.lessons} lessons" }
                 button(Props(

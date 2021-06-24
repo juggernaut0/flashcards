@@ -1,6 +1,8 @@
 package kana
 
 fun Char.isKana() = code in 0x3040..0x30FF
+fun String.isCjk() = any { it.code in 0x4E00..0x9FFF }
+fun String.isKana() = any { it.isKana() }
 
 fun romajiToKana(s: String): String {
     // scan left to right converting romaji to kana

@@ -41,6 +41,14 @@ dependencies {
     testImplementation(kotlin("test-junit"))
 }
 
+kotlin {
+    sourceSets.all {
+        languageSettings {
+            useExperimentalAnnotation("kotlin.RequiresOptIn")
+        }
+    }
+}
+
 application {
     mainClassName = "flashcards.MainKt"
 }

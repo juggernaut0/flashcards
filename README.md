@@ -15,9 +15,10 @@
 ## TODO
 
 * Features
-  * Add Lesson screen
-    * Custom card source: stage 0 cards should go to lessons, not reviews
   * Review screen: session progress (completed/total)
+  * Review summary improvements
+    * Split into two columns, correct vs missed
+    * show new SRS stage
   * **WaniKani support**
   * Blocklist and closelist support in reviews
     * Blocklist: Hidden list of inputs that are rejected, even if close to an answer

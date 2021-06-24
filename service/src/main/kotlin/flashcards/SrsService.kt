@@ -35,6 +35,7 @@ class SrsService @Inject constructor(
     suspend fun isUpForReview(cardGroup: CardGroup, now: Instant = Instant.now()): Boolean {
         val stages = getDefaultStages()
 
+        if (cardGroup.srsStage == 0) return false
         if (cardGroup.srsStage !in stages.indices) return false
         val nextReview =
             (cardGroup.lastReviewed.toJavaInstant() + Duration.ofSeconds(stages[cardGroup.srsStage].toLong()))
@@ -47,9 +48,14 @@ class SrsService @Inject constructor(
         val totalIncorrect = timesIncorrect.sum()
         return when {
             totalIncorrect == 0 -> currentStage + 1
-            currentStage == 0 -> 0
+            currentStage <= 1 -> currentStage
+            currentStage > 1 -> currentStage - 1
             currentStage > 4 -> currentStage - 2
-            else -> currentStage - 1
+            else -> error("unreachable")
         }
+    }
+
+    fun isUpForLesson(cardGroup: CardGroup): Boolean {
+        return cardGroup.srsStage == 0
     }
 }

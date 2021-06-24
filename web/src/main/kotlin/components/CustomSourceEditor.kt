@@ -53,10 +53,12 @@ class CustomSourceEditor(source: CardSource.CustomCardSource, private val makeDi
 
         private fun addCard() {
             val contents = CardModalContents()
-            Modal.show("Add Card", contents) {
-                cards.add(contents.toCard())
-                makeDirty()
-                render()
+            Modal.show("Add Card", contents) { ok ->
+                if (ok) {
+                    cards.add(contents.toCard())
+                    makeDirty()
+                    render()
+                }
             }
         }
 
@@ -73,10 +75,12 @@ class CustomSourceEditor(source: CardSource.CustomCardSource, private val makeDi
 
         private fun editCard(i: Int, card: Card) {
             val contents = CardModalContents(card)
-            Modal.show("Edit Card", contents) {
-                cards[i] = contents.toCard()
-                makeDirty()
-                render()
+            Modal.show("Edit Card", contents) { ok ->
+                if (ok) {
+                    cards[i] = contents.toCard()
+                    makeDirty()
+                    render()
+                }
             }
         }
 

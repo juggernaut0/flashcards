@@ -9,6 +9,8 @@ import graphql.schema.GraphQLSchema
 import graphql.schema.idl.SchemaPrinter
 import io.ktor.auth.*
 import io.ktor.routing.*
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
@@ -32,6 +34,7 @@ fun Route.registerRoutes(handler: GraphQLHandler) {
     }
 }
 
+@OptIn(FlowPreview::class)
 class GraphQLHandler @Inject constructor(
     private val accountService: AccountService,
     private val deckDao: DeckDao,
@@ -66,11 +69,21 @@ class GraphQLHandler @Inject constructor(
         type(CardGroup.serializer())
         type(Card.serializer())
         type(Deck.serializer()) {
-            field("lessons", Int.serializer()) { 0 }
+            field("sources", ListSerializer(CardSource.serializer())) { sources().toList() }
+            field("lessons", Int.serializer()) {
+                sources()
+                    .toList()
+                    .sumOf { source ->
+                        when (source) {
+                            is CardSource.CustomCardSource -> source.groups.count { srsService.isUpForLesson(it) }
+                            else -> 0
+                        }
+                    }
+            }
             field("reviews", Int.serializer()) {
-                val ctx = coroutineContext[QueryContext]!!
                 val now = Instant.now()
-                sources.mapNotNull { sourceDao.getSource(ctx.dslContext, ctx.accountId, it)?.toSchemaModel() }
+                sources()
+                    .toList()
                     .sumOf { source ->
                         when (source) {
                             is CardSource.CustomCardSource -> source.groups.count { srsService.isUpForReview(it, now) }
@@ -78,14 +91,21 @@ class GraphQLHandler @Inject constructor(
                         }
                     }
             }
-            field("sources", ListSerializer(CardSource.serializer())) {
-                val ctx = coroutineContext[QueryContext]!!
-                sources.mapNotNull { sourceDao.getSource(ctx.dslContext, ctx.accountId, it)?.toSchemaModel() }
+            field("lessonItems", ListSerializer(ReviewItem.serializer()), LessonItemParams.serializer()) {
+                sources()
+                    .flatMapConcat { source ->
+                        when (source) {
+                            is CardSource.CustomCardSource -> source.groups.filter { srsService.isUpForLesson(it) }
+                            else -> emptyList()
+                        }.map { group -> ReviewItem(source.id, group) }.asFlow()
+                    }
+                    .take(it.limit)
+                    .toList()
             }
             field("reviewItems", ListSerializer(ReviewItem.serializer())) {
-                val ctx = coroutineContext[QueryContext]!!
                 val now = Instant.now()
-                sources.mapNotNull { sourceDao.getSource(ctx.dslContext, ctx.accountId, it)?.toSchemaModel() }
+                sources()
+                    .toList()
                     .flatMap { source ->
                         when (source) {
                             is CardSource.CustomCardSource -> source.groups.filter { srsService.isUpForReview(it, now) }
@@ -128,12 +148,19 @@ class GraphQLHandler @Inject constructor(
         return Deck(
             id = deckRecord.id,
             name = deckRecord.name,
-            sources = sources,
+            sourceIds = sources,
         )
+    }
+
+    private suspend fun Deck.sources(): Flow<CardSource> {
+        val ctx = coroutineContext[QueryContext]!!
+        return sourceIds.asFlow().mapNotNull { sourceDao.getSource(ctx.dslContext, ctx.accountId, it)?.toSchemaModel() }
     }
 
     @Serializable
     data class IdParam(@Serializable(with = UUIDSerializer::class) val id: UUID)
+    @Serializable
+    data class LessonItemParams(val limit: Int)
 
     class QueryContext(val dslContext: DSLContext, val accountId: UUID) : CoroutineContext.Element {
         override val key: CoroutineContext.Key<QueryContext> = QueryContext

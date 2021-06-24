@@ -33,8 +33,8 @@ class Dashboard(private val service: FlashcardsService) : Component() {
                 }
             }
         }
-        Modal.show("Create deck", contents) {
-            async {
+        async {
+            if(Modal.suspendShow("Create deck", contents)) {
                 val deck = service.createDeck(DeckRequest(contents.name, emptyList()))
                 FlashcardsApp.pushState(DeckOverview(service, deck))
             }

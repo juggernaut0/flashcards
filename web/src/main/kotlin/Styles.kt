@@ -488,6 +488,12 @@ label {
     border: 1px solid $borderGray;
     padding: 0.5rem;
 }
+
+.button-next-lesson {
+    flex-basis: 50%;
+    margin: auto;
+}
+
 """
 
 private const val modalCss = """

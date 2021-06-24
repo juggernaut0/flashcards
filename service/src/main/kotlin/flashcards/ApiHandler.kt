@@ -105,9 +105,12 @@ class ApiHandler @Inject constructor(
                 ?: throw BadRequestException("Can only submit reviews for custom card sources")
             val group = groups.find { it.iid == iid }
                 ?: throw BadRequestException("Card Group with iid [$iid] not found")
+            if (!srsService.isUpForLesson(group) && !srsService.isUpForReview(group))
+                throw BadRequestException("Card Group with iid [$iid] is not up for review")
+
             val newStage = srsService.adjustStage(group.srsStage, request.timesIncorrect)
             val newGroups = groups.map {
-                if (it .iid != iid) it
+                if (it.iid != iid) it
                 else GraphqlCardGroup(cards = it.cards, iid = it.iid, srsStage = newStage, lastReviewed = now)
             }
             sourceDao.updateSource(dsl, accountId, sourceId, customCards = newGroups)

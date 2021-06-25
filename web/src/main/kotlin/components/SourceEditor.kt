@@ -108,5 +108,5 @@ class SourceEditor(private val service: FlashcardsService, private val sourceId:
     class CardGroup(val cards: List<Card>, val iid: Int)
 
     @Serializable
-    class Card(val front: String, val back: String, val prompt: String?, val notes: String?)
+    class Card(val front: String, val back: String, val prompt: String?, val synonyms: List<String>?, val notes: String?)
 }

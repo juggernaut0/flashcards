@@ -14,7 +14,7 @@ class CustomSourceEditor(source: CardSource.CustomCardSource, private val makeDi
     private val groups = source.groups.mapTo(mutableListOf()) {
         CardGroupView(
             cards = it.cards.mapTo(mutableListOf()) { c ->
-                Card(front = c.front, back = c.back, prompt = c.prompt, notes = c.notes)
+                Card(front = c.front, back = c.back, prompt = c.prompt, synonyms = c.synonyms, notes = c.notes)
             },
             iid = it.iid
         )
@@ -139,7 +139,7 @@ class CustomSourceEditor(source: CardSource.CustomCardSource, private val makeDi
                 front = front,
                 back = back,
                 prompt = prompt.takeIf { it.isNotBlank() },
-                synonyms = synonyms,
+                synonyms = synonyms.takeIf { it.isNotEmpty() },
                 notes = notes.takeIf { it.isNotBlank() },
             )
         }

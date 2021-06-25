@@ -13,6 +13,7 @@ class KanaTest {
         assertEquals("べっぷ", romajiToKana("beppu"))
         assertEquals("しゅつ", romajiToKana("shutsu"))
         assertEquals("あんき", romajiToKana("annki"))
+        assertEquals("らーめん", romajiToKana("ra-menn"))
     }
 
     @Test
@@ -36,7 +37,7 @@ class KanaTest {
     }
 
     @Test
-    fun testConverReverse() {
+    fun testConvertReverse() {
         assertEquals("kakikaerareru", kanaToRomaji("かきかえられる"))
         assertEquals("tsunami", kanaToRomaji("つなみ"))
         assertEquals("chuunibyou", kanaToRomaji("ちゅうにびょう"))
@@ -44,5 +45,6 @@ class KanaTest {
         assertEquals("beppu", kanaToRomaji("べっぷ"))
         assertEquals("shutsu", kanaToRomaji("しゅつ"))
         assertEquals("annki", kanaToRomaji("あんき"))
+        assertEquals("ra-menn", kanaToRomaji("らーめん"))
     }
 }

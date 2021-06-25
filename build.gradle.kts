@@ -4,7 +4,7 @@ plugins {
 }
 
 subprojects {
-    version = "5"
+    version = "6"
 
     repositories {
         mavenLocal()

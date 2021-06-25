@@ -70,7 +70,7 @@ class LessonScreen(private val service: FlashcardsService, private val deckId: U
                     component(Header(service))
                     div(classes("row")) {
                         for (card in item.cardGroup.cards) {
-                            h3 { +"${card.front} - ${card.prompt}" }
+                            h3 { +card.toDisplayString() }
                             h4 { +card.back }
                             if (!card.notes.isNullOrBlank()) {
                                 p { +card.notes }

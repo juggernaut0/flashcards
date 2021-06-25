@@ -183,5 +183,6 @@ private val mapping = mapOf(
     "wo" to "を",
     "nn" to "ん",
     "ltsu" to "っ",
+    "-" to "ー",
 )
 private val reverseMapping = mapping.entries.associateTo(mutableMapOf()) { (k, v) -> v to k }.also { it.remove("っ") }

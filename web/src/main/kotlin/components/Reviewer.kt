@@ -30,6 +30,7 @@ class Reviewer(
         require(items.isNotEmpty()) { "items must not be empty" }
     }
 
+    private val totalItems = items.size
     private val cards: Iterator<ReviewCard> = items.makeClumps()
     private var currentItem: ReviewCard = cards.next()
     private var input: String = ""
@@ -60,7 +61,7 @@ class Reviewer(
                     workingGroups.remove(item)
                     async {
                         try {
-                            summary.add(item.cards.map { "${it.card.front} - ${it.card.prompt}" to (it.timesIncorrect == 0) })
+                            summary.add(item.cards.map { it.card.toDisplayString() to (it.timesIncorrect == 0) })
                             val timesIncorrect = if (lessonMode) List(item.cards.size) { 0 } else item.cards.map { it.timesIncorrect }
                             service.submitReview(
                                 sourceId = item.sourceId,
@@ -178,6 +179,10 @@ class Reviewer(
         val item = currentItem
         markup().div {
             div(classes("review-main")) {
+                div(classes("review-main-header")) {
+                    span { +item.source.name }
+                    span { +"${summary.size}/$totalItems" }
+                }
                 val props = if (item.card.front.isCjk()) {
                     Props(attrs = mapOf("lang" to "ja"))
                 } else {
@@ -251,7 +256,7 @@ class Reviewer(
     @Serializable
     class ReviewItem(val source: Source, val cardGroup: CardGroup)
     @Serializable
-    class Source(@Serializable(with = UUIDSerializer::class) val id: UUID, val __typename: String)
+    class Source(@Serializable(with = UUIDSerializer::class) val id: UUID, val name: String, val __typename: String)
     @Serializable
     data class CardGroup(val cards: List<Card>, val iid: Int)
     @Serializable
@@ -261,15 +266,22 @@ class Reviewer(
         val prompt: String? = null,
         val synonyms: List<String>? = null,
         val notes: String? = null,
-    )
+    ) {
+        fun toDisplayString(): String = buildString {
+            append(front)
+            if (prompt != null) {
+                append(" - ", prompt)
+            }
+        }
+    }
 
     private class ReviewGroup(reviewItem: ReviewItem) {
-        val cards = reviewItem.cardGroup.cards.map { ReviewCard(it) }
+        val cards = reviewItem.cardGroup.cards.map { ReviewCard(it, reviewItem.source) }
         val sourceId = reviewItem.source.id
         val iid = reviewItem.cardGroup.iid
         fun isFinished() = cards.all { it.finished }
     }
-    private class ReviewCard(val card: Card) {
+    private class ReviewCard(val card: Card, val source: Source) {
         var timesIncorrect = 0
         var finished = false
     }

@@ -360,6 +360,16 @@ label {
     text-shadow: 5px 5px #555;
 }
 
+.review-main-header {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    line-height: normal;
+    padding: 0.5rem;
+    text-shadow: none;
+}
+
 .review-prompt {
     width: 100%;
     background: #ccc;

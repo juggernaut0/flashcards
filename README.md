@@ -15,11 +15,11 @@
 ## TODO
 
 * Features
-  * Review screen: session progress (completed/total)
   * Review summary improvements
     * Split into two columns, correct vs missed
     * show new SRS stage
   * **WaniKani support**
+  * Add created_dt column to deck and card source tables, sort by created_dt when querying
   * Blocklist and closelist support in reviews
     * Blocklist: Hidden list of inputs that are rejected, even if close to an answer
     * closelist: Hidden list of inputs that are close but not correct, e.g. reading for a meaning card

@@ -3,6 +3,7 @@
 package components
 
 import FlashcardsService
+import WanikaniService
 import asynclite.async
 import asynclite.delay
 import flashcards.api.v1.CardSourceRequest
@@ -17,7 +18,7 @@ import multiplatform.UUIDSerializer
 import multiplatform.graphql.GraphQLArgument
 import multiplatform.graphql.GraphQLVariable
 
-class SourceEditor(private val service: FlashcardsService, private val sourceId: UUID) : Component() {
+class SourceEditor(private val service: FlashcardsService, private val wanikaniService: WanikaniService, private val sourceId: UUID) : Component() {
     private var source: CardSource? = null
     private lateinit var inner: Contents
     private var dirty = false
@@ -28,7 +29,7 @@ class SourceEditor(private val service: FlashcardsService, private val sourceId:
             val source = service.query(Query.serializer(), "id" to sourceId).source
             inner = when(source) {
                 is CardSource.CustomCardSource -> CustomSourceEditor(source, ::makeDirty)
-                is CardSource.WanikaniCardSource -> WanikaniSourceEditor(service, source)
+                is CardSource.WanikaniCardSource -> WanikaniSourceEditor(wanikaniService, source)
             }
             this.source = source
             render()
@@ -65,7 +66,7 @@ class SourceEditor(private val service: FlashcardsService, private val sourceId:
             if (source == null) {
                 p { +"Loading..." }
             } else {
-                component(Header(service))
+                component(Header())
                 div(classes("sticky-top", "solid-row")) {
                     h2 { +source.name }
                     div(classes("gapped-row")) {

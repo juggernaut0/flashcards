@@ -2,7 +2,6 @@ package flashcards
 
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlin.properties.ReadOnlyProperty
 
 fun <T> suspendLazy(supplier: suspend () -> T) = SuspendLazy(supplier)
 class SuspendLazy<T>(private val supplier: suspend () -> T) {

@@ -7,7 +7,7 @@ import kui.classes
 class ReviewSummary(private val service: FlashcardsService, private val data: List<List<Pair<String, Boolean>>>) : Component() {
     override fun render() {
         markup().div(classes("container")) {
-            component(Header(service))
+            component(Header())
             h2 { +"Review Summary" }
             div {
                 hr()

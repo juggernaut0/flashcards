@@ -67,7 +67,7 @@ class LessonScreen(private val service: FlashcardsService, private val deckId: U
             learnMode -> {
                 val item = items[currentItem]
                 markup().div(classes("container")) {
-                    component(Header(service))
+                    component(Header())
                     div(classes("row")) {
                         for (card in item.cardGroup.cards) {
                             h3 { +card.toDisplayString() }

@@ -34,14 +34,6 @@ class FlashcardsService {
     suspend fun submitReview(sourceId: UUID, iid: Int, request: ReviewRequest) {
         client.callApi(submitReview, ReviewParam(sourceId, iid), request)
     }
-
-    fun saveApiKey(sourceId: UUID, apiKey: String) {
-        // TODO
-    }
-
-    fun getApiKey(sourceId: UUID): String {
-        return "01234567-abcd-abcd-abcd-0123456789ab"
-    }
 }
 
 fun Iterable<Pair<String, String>>.asHeaders(): Headers = object : Headers, Iterable<Pair<String, String>> by this {}

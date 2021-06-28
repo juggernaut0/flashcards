@@ -59,7 +59,7 @@ class DeckOverview(private val service: FlashcardsService, private val deckId: U
             if (deck == null) {
                 p { +"Loading..." }
             } else {
-                component(Header(service))
+                component(Header())
                 h2 { +deck.name }
                 button(Props(
                     classes = listOf("start-lesson-button"),

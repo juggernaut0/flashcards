@@ -65,7 +65,12 @@ class GraphQLHandler @Inject constructor(
             }
         }
 
-        `interface`(CardSource.serializer())
+        `interface`(CardSource.serializer()) {
+            subtype(CardSource.CustomCardSource.serializer()) {
+                field("lessons", Int.serializer()) { lessonCount() }
+                field("reviews", Int.serializer()) { reviewCount(Instant.now()) }
+            }
+        }
         type(CardGroup.serializer())
         type(Card.serializer())
         type(Deck.serializer()) {
@@ -75,7 +80,7 @@ class GraphQLHandler @Inject constructor(
                     .toList()
                     .sumOf { source ->
                         when (source) {
-                            is CardSource.CustomCardSource -> source.groups.count { srsService.isUpForLesson(it) }
+                            is CardSource.CustomCardSource -> source.lessonCount()
                             else -> 0
                         }
                     }
@@ -86,7 +91,7 @@ class GraphQLHandler @Inject constructor(
                     .toList()
                     .sumOf { source ->
                         when (source) {
-                            is CardSource.CustomCardSource -> source.groups.count { srsService.isUpForReview(it, now) }
+                            is CardSource.CustomCardSource -> source.reviewCount(now)
                             else -> 0
                         }
                     }
@@ -155,6 +160,11 @@ class GraphQLHandler @Inject constructor(
     private suspend fun Deck.sources(): Flow<CardSource> {
         val ctx = coroutineContext[QueryContext]!!
         return sourceIds.asFlow().mapNotNull { sourceDao.getSource(ctx.dslContext, ctx.accountId, it)?.toSchemaModel() }
+    }
+
+    private fun CardSource.CustomCardSource.lessonCount(): Int = groups.count { srsService.isUpForLesson(it) }
+    private suspend fun CardSource.CustomCardSource.reviewCount(now: Instant): Int {
+        return groups.count { srsService.isUpForReview(it, now) }
     }
 
     @Serializable

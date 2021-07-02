@@ -23,10 +23,10 @@ class WanikaniSourceEditor(private val service: WanikaniService, private val sou
 
     override fun render() {
         markup().div(classes("row")) {
-            span {
+            p {
                 +"You can find or generate API keys in your "
                 a(Props(attrs = mapOf("target" to "_blank")), href = "https://www.wanikani.com/settings/personal_access_tokens") { +"WaniKani settings" }
-                +". Make sure you key has all permissions enabled."
+                +". Make sure your key has all permissions enabled."
             }
             label {
                 +"API Key"

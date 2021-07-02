@@ -48,8 +48,13 @@ class DeckDao @Inject constructor() {
             .await()
             .takeIf { it.isNotEmpty }
             ?.let { records ->
-                val deckRecord = records.first().into(DECK)
-                val sources = records.map { it[DECK_CARD_SOURCE.SOURCE_ID] }
+                val first = records.first()
+                val deckRecord = first.into(DECK)
+                val sources = if (first[DECK_CARD_SOURCE.SOURCE_ID] != null) { // first sourceId null means no sources
+                    records.map { it[DECK_CARD_SOURCE.SOURCE_ID] }
+                } else {
+                    emptyList()
+                }
                 DeckData(deckRecord, sources)
             }
     }

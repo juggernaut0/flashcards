@@ -61,7 +61,7 @@ class SourceCreation(private val service: FlashcardsService, private val wanikan
             component(Header())
             h2 { +"Add a card source" }
             div(classes("row")) {
-                inputText(placeholder = "Name", model = ::name)
+                inputText(classes("form-input"), placeholder = "Name", model = ::name)
             }
             div(classes("row")) {
                 label { +"Choose source type" }
@@ -77,7 +77,7 @@ class SourceCreation(private val service: FlashcardsService, private val wanikan
             if (selectedType == Type.WANIKANI) {
                 div(classes("row")) {
                     label { +"API Key (Make sure it has all permissions)" }
-                    inputText(placeholder = "01234567-abcd-abcd-abcd-0123456789ab", model = ::apiKey)
+                    inputText(classes("form-input"), placeholder = "01234567-abcd-abcd-abcd-0123456789ab", model = ::apiKey)
                 }
             }
             if (error != null) {

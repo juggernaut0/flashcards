@@ -107,8 +107,15 @@ tasks {
         into("$buildDir/resources/main/static/js")
     }
 
+    val copyCss by registering(Copy::class) {
+        val runSass = project(":web").tasks.named<SassTask>("runSass")
+        dependsOn(runSass)
+        from(runSass.flatMap { it.outputFile })
+        into("$buildDir/resources/main/static/css")
+    }
+
     classes {
-        dependsOn(copyWeb)
+        dependsOn(copyWeb, copyCss)
     }
 
     run.invoke {

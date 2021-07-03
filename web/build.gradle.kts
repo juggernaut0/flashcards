@@ -32,3 +32,14 @@ kotlin {
         binaries.executable()
     }
 }
+
+tasks {
+    val runSass by registering(SassTask::class) {
+        inputFile.set(file("src/main/resources/index.scss"))
+        outputFile.set(file("$buildDir/sassOut/index.css"))
+    }
+
+    assemble {
+        dependsOn(runSass)
+    }
+}

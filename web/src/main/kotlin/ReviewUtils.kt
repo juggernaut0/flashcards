@@ -21,7 +21,7 @@ fun fuzzyMatch(given: String, expected: String): FuzzyMatchResult {
         if (lev <= 1) FuzzyMatchResult.CLOSE
         else FuzzyMatchResult.REJECT
     } else {
-        if (lev <= 2) FuzzyMatchResult.ALLOW_WITH_TYPO
+        if (lev <= 2 && expected.length > 2 && given.length > 2) FuzzyMatchResult.ALLOW_WITH_TYPO
         else FuzzyMatchResult.REJECT
     }
 }

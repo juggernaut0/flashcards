@@ -147,13 +147,14 @@ class Reviewer(
     }
 
     private fun oops(item: ReviewCard) {
-        if (inputState == InputState.WAITING) return
-
-        if (inputState == InputState.INCORRECT) {
-            item.timesIncorrect -= 1
+        when (inputState) {
+            InputState.WAITING -> return
+            InputState.INCORRECT -> item.timesIncorrect -= 1
+            InputState.CORRECT -> item.finished = false
         }
         inputState = InputState.WAITING
         notesShown = false
+        setMistakeText("")
         render()
         setInputFocus()
     }

@@ -146,6 +146,7 @@ class Reviewer(
         }
         inputState = InputState.WAITING
         notesShown = false
+        setMistakeText("")
         render()
         setInputFocus()
     }

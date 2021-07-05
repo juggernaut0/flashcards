@@ -1,7 +1,7 @@
-package components
+package review
 
 import asynclite.async
-import fuzzyMatch
+import components.KanaInput
 import kana.isCjk
 import kana.isKana
 import kotlinx.browser.document

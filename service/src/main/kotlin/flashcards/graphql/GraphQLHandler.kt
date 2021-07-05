@@ -12,12 +12,10 @@ import io.ktor.routing.*
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.nullable
 import kotlinx.serialization.builtins.serializer
 import multiplatform.UUID
-import multiplatform.UUIDSerializer
 import multiplatform.graphql.*
 import multiplatform.ktor.handleApi
 import org.jooq.DSLContext
@@ -69,55 +67,19 @@ class GraphQLHandler @Inject constructor(
             subtype(CardSource.CustomCardSource.serializer()) {
                 field("lessons", Int.serializer()) { lessonCount() }
                 field("reviews", Int.serializer()) { reviewCount(Instant.now()) }
+                field("lessonItems", ListSerializer(ReviewItem.serializer())) {
+                    groups.filter { srsService.isUpForLesson(it) }.map { group -> ReviewItem(id, group) }
+                }
+                field("reviewItems", ListSerializer(ReviewItem.serializer())) {
+                    val now = Instant.now()
+                    groups.filter { srsService.isUpForReview(it, now) }.map { group -> ReviewItem(id, group) }
+                }
             }
         }
         type(CardGroup.serializer())
         type(Card.serializer())
         type(Deck.serializer()) {
             field("sources", ListSerializer(CardSource.serializer())) { sources().toList() }
-            field("lessons", Int.serializer()) {
-                sources()
-                    .toList()
-                    .sumOf { source ->
-                        when (source) {
-                            is CardSource.CustomCardSource -> source.lessonCount()
-                            else -> 0
-                        }
-                    }
-            }
-            field("reviews", Int.serializer()) {
-                val now = Instant.now()
-                sources()
-                    .toList()
-                    .sumOf { source ->
-                        when (source) {
-                            is CardSource.CustomCardSource -> source.reviewCount(now)
-                            else -> 0
-                        }
-                    }
-            }
-            field("lessonItems", ListSerializer(ReviewItem.serializer()), LessonItemParams.serializer()) {
-                sources()
-                    .flatMapConcat { source ->
-                        when (source) {
-                            is CardSource.CustomCardSource -> source.groups.filter { srsService.isUpForLesson(it) }
-                            else -> emptyList()
-                        }.map { group -> ReviewItem(source.id, group) }.asFlow()
-                    }
-                    .take(it.limit)
-                    .toList()
-            }
-            field("reviewItems", ListSerializer(ReviewItem.serializer())) {
-                val now = Instant.now()
-                sources()
-                    .toList()
-                    .flatMap { source ->
-                        when (source) {
-                            is CardSource.CustomCardSource -> source.groups.filter { srsService.isUpForReview(it, now) }
-                            else -> emptyList()
-                        }.map { group -> ReviewItem(source.id, group) }
-                    }
-            }
         }
         type(ReviewItem.serializer()) {
             field("source", CardSource.serializer()) {
@@ -166,11 +128,6 @@ class GraphQLHandler @Inject constructor(
     private suspend fun CardSource.CustomCardSource.reviewCount(now: Instant): Int {
         return groups.count { srsService.isUpForReview(it, now) }
     }
-
-    @Serializable
-    data class IdParam(@Serializable(with = UUIDSerializer::class) val id: UUID)
-    @Serializable
-    data class LessonItemParams(val limit: Int)
 
     class QueryContext(val dslContext: DSLContext, val accountId: UUID) : CoroutineContext.Element {
         override val key: CoroutineContext.Key<QueryContext> = QueryContext

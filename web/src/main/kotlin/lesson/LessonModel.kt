@@ -4,7 +4,6 @@ package lesson
 
 import FlashcardsService
 import WanikaniService
-import components.Reviewer
 import flashcards.api.v1.ReviewRequest
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -13,9 +12,8 @@ import multiplatform.UUID
 import multiplatform.UUIDSerializer
 import multiplatform.graphql.GraphQLArgument
 import multiplatform.graphql.GraphQLVariable
-import wanikani.KanjiSubject
-import wanikani.RadicalSubject
-import wanikani.VocabularySubject
+import review.Reviewer
+import wanikani.toCardGroup
 
 class LessonModel(
     private val flashcardsService: FlashcardsService,
@@ -39,77 +37,7 @@ class LessonModel(
                         val itemSource = Reviewer.Source(source.id, source.name, "WanikaniCardSource")
                         wkAccount.getLessons().mapNotNull { assignment ->
                             val subject = wkAccount.getSubject(assignment.data.subjectId) ?: return@mapNotNull null
-                            // TODO for notes, remove or process WK markup
-                            val cards = when (val data = subject.data) {
-                                is RadicalSubject -> {
-                                    val front = data.characters
-                                        ?: data.characterImages.find {
-                                            it.contentType == "image/svg+xml" && it.metadata.inline_styles == true
-                                        }?.url
-                                        ?: data.slug
-                                    val (pri, syn) = data.meanings.partition { it.primary }
-                                    listOf(Reviewer.Card(
-                                        front = front,
-                                        back = pri.first().meaning,
-                                        prompt = "Radical Meaning",
-                                        synonyms = syn.map { it.meaning },
-                                        notes = data.meaningMnemonic
-                                    ))
-                                }
-                                is KanjiSubject -> {
-                                    val front = data.characters
-                                    val (reading, readingSyn) = data.readings.filter { it.accepted_answer }.partition { it.primary }
-                                    val readingPrompt = when (reading.first().type) {
-                                        "kunyomi" -> "Kanji Kun'yomi"
-                                        "onyomi" -> "Kanji On'yomi"
-                                        "nanori" -> "Kanji Nanori"
-                                        else -> "Kanji Reading"
-                                    }
-                                    val readingNotes = data.reading_mnemonic + data.reading_hint?.let { "\n\n$it" }.orEmpty()
-                                    val (meaning, meaningSyn) = data.meanings.partition { it.primary }
-                                    val meaningNotes = data.meaning_mnemonic + data.meaning_hint?.let { "\n\n$it" }.orEmpty()
-                                    listOf(
-                                        Reviewer.Card(
-                                            front = front,
-                                            back = meaning.first().meaning,
-                                            prompt = "Kanji Meaning",
-                                            synonyms = meaningSyn.map { it.meaning },
-                                            notes = meaningNotes
-                                        ),
-                                        Reviewer.Card(
-                                            front = front,
-                                            back = reading.first().reading,
-                                            prompt = readingPrompt,
-                                            synonyms = readingSyn.map { it.reading },
-                                            notes = readingNotes,
-                                        ),
-                                    )
-                                }
-                                is VocabularySubject -> {
-                                    val front = data.characters
-                                    val (reading, readingSyn) = data.readings.filter { it.accepted_answer }.partition { it.primary }
-                                    val readingNotes = data.reading_mnemonic + data.reading_hint?.let { "\n\n$it" }.orEmpty()
-                                    val (meaning, meaningSyn) = data.meanings.partition { it.primary }
-                                    val meaningNotes = data.meaning_mnemonic + data.meaning_hint?.let { "\n\n$it" }.orEmpty()
-                                    listOf(
-                                        Reviewer.Card(
-                                            front = front,
-                                            back = meaning.first().meaning,
-                                            prompt = "Vocab Meaning",
-                                            synonyms = meaningSyn.map { it.meaning },
-                                            notes = meaningNotes
-                                        ),
-                                        Reviewer.Card(
-                                            front = front,
-                                            back = reading.first().reading,
-                                            prompt = "Vocab Reading",
-                                            synonyms = readingSyn.map { it.reading },
-                                            notes = readingNotes,
-                                        ),
-                                    )
-                                }
-                            }
-                            val group = Reviewer.CardGroup(cards, iid = assignment.id)
+                            val group = toCardGroup(assignment, subject)
                             Reviewer.ReviewItem(itemSource, group)
                         }
                     }
@@ -133,6 +61,7 @@ class LessonModel(
     private suspend fun getCustomLessons(sourceId: UUID): List<Reviewer.ReviewItem> {
         return flashcardsService.query(LessonItemQuery.serializer(), "sourceId" to sourceId)
             .source
+            .let { it as LessonItemQuery.CardSource.CustomCardSource }
             .lessonItems
     }
 
@@ -174,7 +103,14 @@ class LessonScreenQuery(@GraphQLArgument("id", "\$id") val deck: Deck) {
 
 @Serializable
 @GraphQLVariable("sourceId", "String!")
-class LessonItemQuery(@GraphQLArgument("sourceId", "\$id")  val source: CardSource) {
+class LessonItemQuery(@GraphQLArgument("id", "\$sourceId")  val source: CardSource) {
     @Serializable
-    class CardSource(val lessonItems: List<Reviewer.ReviewItem>)
+    sealed class CardSource {
+        @Serializable
+        @SerialName("CustomCardSource")
+        class CustomCardSource(val lessonItems: List<Reviewer.ReviewItem>) : CardSource()
+        @Serializable
+        @SerialName("WanikaniCardSource")
+        object WanikaniCardSource : CardSource()
+    }
 }

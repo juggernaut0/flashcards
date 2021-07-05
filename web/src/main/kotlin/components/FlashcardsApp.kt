@@ -12,6 +12,9 @@ import kotlinx.browser.window
 import lesson.LessonModel
 import lesson.LessonScreen
 import multiplatform.UUID
+import review.ReviewModel
+import review.ReviewScreen
+import review.ReviewSummaryData
 
 object FlashcardsApp : Component() {
     private val emptyComponent = componentOf { it.div {  } }
@@ -41,7 +44,7 @@ object FlashcardsApp : Component() {
     }
 
     fun pushReviewScreen(deckId: UUID) {
-        pushState(ReviewScreen(flashcardsService, deckId))
+        pushState(ReviewScreen(ReviewModel(flashcardsService, wanikaniService, deckId)))
     }
 
     fun pushReviewSummary(summaryData: ReviewSummaryData) {
@@ -56,8 +59,7 @@ object FlashcardsApp : Component() {
         pushState(SourceEditor(flashcardsService, wanikaniService, sourceId))
     }
 
-    // TODO make private
-    fun pushState(component: Component) {
+    private fun pushState(component: Component) {
         val wasEmpty = history.isEmpty()
         if (current == history.lastIndex) {
             history.add(component)

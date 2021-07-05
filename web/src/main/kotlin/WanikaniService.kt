@@ -86,6 +86,12 @@ class WanikaniAccount private constructor(
         assignments[updatedAssign.id] = updatedAssign
     }
 
+    suspend fun createReview(assignmentId: Long, meaningIncorrect: Int, readingIncorrect: Int) {
+        val review = wkCall.createReview(assignmentId, meaningIncorrect, readingIncorrect, Clock.System.now())
+        val assignment = review.resources_updated?.assignment!!
+        assignments[assignment.id] = assignment
+    }
+
     private suspend fun writeToStorage() {
         val data = Data(lastUpdated!!, assignments.values.toList(), subjects.values.toList())
         console.log("start write")

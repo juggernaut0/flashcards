@@ -11,7 +11,10 @@ class WkCollection<T>(val pages: Pages, val data: List<WkObject<T>>)
 class Pages(@SerialName("next_url") val nextUrl: String?)
 
 @Serializable
-class WkObject<T>(val id: Long, val `object`: String, val data: T)
+class WkObject<T>(val id: Long, val `object`: String, val data: T, val resources_updated: ResourcesUpdated? = null)
+
+@Serializable
+class ResourcesUpdated(val assignment: WkObject<Assignment>? = null)
 
 @Serializable
 class Assignment(
@@ -92,7 +95,6 @@ class SubjectMeaning(val meaning: String, val primary: Boolean)
 
 @Serializable
 class Review(
-    @SerialName("created_at") val createdAt: Instant,
     @SerialName("subject_id") val subjectId: Long,
     @SerialName("starting_srs_stage") val startingSrsStage: Int,
     @SerialName("ending_srs_stage") val endingSrsStage: Int

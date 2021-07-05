@@ -1,8 +1,12 @@
 package lesson
 
 import asynclite.async
-import components.*
+import components.FlashcardsApp
+import components.Header
+import components.Modal
 import kui.*
+import review.ReviewSummaryData
+import review.Reviewer
 
 class LessonScreen(private val model: LessonModel) : Component() {
     private var items: List<Reviewer.ReviewItem> = emptyList()

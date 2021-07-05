@@ -9,6 +9,8 @@ import deck.overview.DeckOverviewModel
 import kui.Component
 import kui.componentOf
 import kotlinx.browser.window
+import lesson.LessonModel
+import lesson.LessonScreen
 import multiplatform.UUID
 
 object FlashcardsApp : Component() {
@@ -35,11 +37,15 @@ object FlashcardsApp : Component() {
     }
 
     fun pushLessonScreen(deckId: UUID) {
-        pushState(LessonScreen(flashcardsService, deckId))
+        pushState(LessonScreen(LessonModel(flashcardsService, wanikaniService, deckId)))
     }
 
     fun pushReviewScreen(deckId: UUID) {
         pushState(ReviewScreen(flashcardsService, deckId))
+    }
+
+    fun pushReviewSummary(summaryData: ReviewSummaryData) {
+        pushState(ReviewSummary(flashcardsService, summaryData))
     }
 
     fun pushSourceCreation() {

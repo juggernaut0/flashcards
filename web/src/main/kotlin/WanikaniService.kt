@@ -2,14 +2,14 @@ import asynclite.await
 import kotlinx.browser.localStorage
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
-import kotlinx.serialization.Serializable
+import kotlinx.serialization.*
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.decodeFromDynamic
+import kotlinx.serialization.json.encodeToDynamic
 import multiplatform.UUID
 import org.w3c.dom.get
 import org.w3c.dom.set
-import wanikani.Assignment
-import wanikani.HttpWkCall
-import wanikani.WkObject
+import wanikani.*
 import kotlin.time.Duration
 import kotlin.time.ExperimentalTime
 
@@ -36,31 +36,35 @@ class WanikaniService {
     }
 }
 
+@OptIn(ExperimentalSerializationApi::class)
 class WanikaniAccount private constructor(
     val apiKey: String,
     var lastUpdated: Instant?,
-    private val assignments: MutableMap<Long, WkObject<Assignment>>
+    private val assignments: MutableMap<Long, WkObject<Assignment>>,
+    private val subjects: MutableMap<Long, WkObject<Subject>>,
 ) {
     private val wkCall = HttpWkCall(apiKey)
 
     // TODO loading progress indication in UI
     @OptIn(ExperimentalTime::class)
-    private suspend fun update() {
+    private suspend fun update(force: Boolean = false) {
         val lastUpdated = lastUpdated
         val now = Clock.System.now()
-        if (lastUpdated != null && now - lastUpdated < Duration.minutes(30)) return
+        if (!force && lastUpdated != null && now - lastUpdated < Duration.minutes(30)) return
         this.lastUpdated = now
         if (lastUpdated == null) {
             wkCall.fetchAssignments().forEach { assignments[it.id] = it }
+            wkCall.fetchSubjects().forEach { subjects[it.id] = it }
         } else {
             wkCall.fetchNewAssignments(lastUpdated).forEach { assignments[it.id] = it }
+            wkCall.fetchNewSubjects(lastUpdated).forEach { subjects[it.id] = it }
         }
         writeToStorage()
     }
 
     suspend fun getLessons(): List<WkObject<Assignment>> {
         update()
-        return assignments.values.filter { it.data.srsStage == 0 }
+        return assignments.values.filter { it.data.srsStage == 0 }.sortedWith(assignmentComparator)
     }
 
     suspend fun getReviews(): List<WkObject<Assignment>> {
@@ -72,27 +76,75 @@ class WanikaniAccount private constructor(
         }
     }
 
+    suspend fun getSubject(id: Long): WkObject<Subject>? {
+        update()
+        return subjects[id]
+    }
+
+    suspend fun startAssignment(assignmentId: Long) {
+        val updatedAssign = wkCall.startAssignment(assignmentId, Clock.System.now())
+        assignments[updatedAssign.id] = updatedAssign
+    }
+
     private suspend fun writeToStorage() {
-        val data = Json.Default.encodeToString(Data.serializer(), Data(lastUpdated!!, assignments.values.toList()))
-        idbkeyval.set("flashcards-wk-$apiKey-data", data).await()
+        val data = Data(lastUpdated!!, assignments.values.toList(), subjects.values.toList())
+        console.log("start write")
+        idbkeyval.set("flashcards-wk-$apiKey-data", Json.Default.encodeToDynamic(Data.serializer(), data)).await()
+        console.log("end write")
     }
 
     companion object {
         suspend fun newFromStorage(apiKey: String): WanikaniAccount {
+            console.log("start read")
             val rawData = idbkeyval.get("flashcards-wk-$apiKey-data").await()
+            console.log("end read")
             return if (rawData == null || rawData == undefined) {
-                WanikaniAccount(apiKey, null, mutableMapOf())
+                WanikaniAccount(apiKey, null, mutableMapOf(), mutableMapOf())
             } else {
-                val data = Json.Default.decodeFromString(Data.serializer(), rawData)
-                WanikaniAccount(
-                    apiKey = apiKey,
-                    lastUpdated = data.lastUpdated,
-                    assignments = data.assignments.associateByTo(mutableMapOf()) { it.id }
-                )
+                try {
+                    console.log("start decode")
+                    val data = Json.Default.decodeFromDynamic(Data.serializer(), rawData)
+                    console.log("end decode")
+                    WanikaniAccount(
+                        apiKey = apiKey,
+                        lastUpdated = data.lastUpdated,
+                        assignments = data.assignments.associateByTo(mutableMapOf()) { it.id },
+                        subjects = data.subjects.associateByTo(mutableMapOf()) { it.id }
+                    )
+                } catch (e: SerializationException) {
+                    console.error(e)
+                    WanikaniAccount(apiKey, null, mutableMapOf(), mutableMapOf())
+                }
             }
         }
     }
 
     @Serializable
-    private class Data(val lastUpdated: Instant, val assignments: List<WkObject<Assignment>>)
+    private class Data(val lastUpdated: Instant, val assignments: List<WkObject<Assignment>>, val subjects: List<WkObject<Subject>>)
+
+    private val assignmentComparator = Comparator<WkObject<Assignment>> { a, b ->
+        SubjectComparator.compare(subjects[a.data.subjectId]!!, subjects[b.data.subjectId]!!)
+    }
+
+    object SubjectComparator : Comparator<WkObject<Subject>> {
+        override fun compare(a: WkObject<Subject>, b: WkObject<Subject>): Int {
+            a.data.level.compareTo(b.data.level).let { if (it != 0) return it }
+
+            val aType = when (a.`object`) {
+                "radical" -> 0
+                "kanji" -> 1
+                "vocabulary" -> 2
+                else -> 3
+            }
+            val bType = when (a.`object`) {
+                "radical" -> 0
+                "kanji" -> 1
+                "vocabulary" -> 2
+                else -> 3
+            }
+            aType.compareTo(bType).let { if (it != 0) return it }
+
+            return a.id.compareTo(b.id)
+        }
+    }
 }

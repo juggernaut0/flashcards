@@ -23,8 +23,72 @@ class Assignment(
     @SerialName("started_at") val startedAt: Instant?
 )
 
+@Serializable // WARNING you cannot use this serializer to deserialize from WK API (missing type discriminator)
+sealed class Subject {
+    abstract val level: Int
+}
+
 @Serializable
-class Subject(val level: Int)
+class RadicalSubject(
+    val characters: String?,
+    @SerialName("character_images") val characterImages: List<CharacterImage>,
+    override val level: Int,
+    val meanings: List<SubjectMeaning>,
+    @SerialName("meaning_mnemonic") val meaningMnemonic: String,
+    val slug: String,
+) : Subject()
+
+@Serializable
+class KanjiSubject(
+    val characters: String,
+    override val level: Int,
+    val meanings: List<SubjectMeaning>,
+    val meaning_mnemonic: String,
+    val meaning_hint: String? = null,
+    val readings: List<KanjiReading>,
+    val reading_mnemonic: String,
+    val reading_hint: String? = null,
+) : Subject()
+
+@Serializable
+class KanjiReading(
+    val reading: String,
+    val primary: Boolean,
+    val accepted_answer: Boolean,
+    val type: String,
+)
+
+@Serializable
+class VocabularySubject(
+    val characters: String,
+    override val level: Int,
+    val meanings: List<SubjectMeaning>,
+    val meaning_mnemonic: String,
+    val meaning_hint: String? = null,
+    val readings: List<VocabReading>,
+    val reading_mnemonic: String,
+    val reading_hint: String? = null,
+) : Subject()
+
+@Serializable
+class VocabReading(
+    val reading: String,
+    val primary: Boolean,
+    val accepted_answer: Boolean,
+)
+
+@Serializable
+class CharacterImage(
+    val url: String,
+    @SerialName("content_type") val contentType: String,
+    val metadata: CharacterImageMetadata,
+)
+
+@Serializable
+class CharacterImageMetadata(val inline_styles: Boolean? = null)
+
+@Serializable
+class SubjectMeaning(val meaning: String, val primary: Boolean)
 
 @Serializable
 class Review(

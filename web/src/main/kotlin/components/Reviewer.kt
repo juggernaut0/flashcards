@@ -1,8 +1,6 @@
 package components
 
-import FlashcardsService
 import asynclite.async
-import flashcards.api.v1.ReviewRequest
 import fuzzyMatch
 import kana.isCjk
 import kana.isKana
@@ -21,10 +19,9 @@ import org.w3c.dom.HTMLInputElement
 typealias ReviewSummaryData = MutableList<List<Pair<String, Boolean>>>
 
 class Reviewer(
-    private val service: FlashcardsService,
     items: List<ReviewItem>,
     private val onComplete: (ReviewSummaryData) -> Unit,
-    private val lessonMode: Boolean = false
+    private val onSubmit: suspend (ReviewResult) -> Unit,
 ) : Component() {
     init {
         require(items.isNotEmpty()) { "items must not be empty" }
@@ -62,12 +59,7 @@ class Reviewer(
                     async {
                         try {
                             summary.add(item.cards.map { it.card.toDisplayString() to (it.timesIncorrect == 0) })
-                            val timesIncorrect = if (lessonMode) List(item.cards.size) { 0 } else item.cards.map { it.timesIncorrect }
-                            service.submitReview(
-                                sourceId = item.sourceId,
-                                iid = item.iid,
-                                request = ReviewRequest(timesIncorrect)
-                            )
+                            onSubmit(ReviewResult(item))
                         } catch (e: FetchException) {
                             console.error(e)
                             errored = true
@@ -147,10 +139,10 @@ class Reviewer(
     }
 
     private fun oops(item: ReviewCard) {
-        if (inputState == InputState.WAITING) return
-
-        if (inputState == InputState.INCORRECT) {
-            item.timesIncorrect -= 1
+        when (inputState) {
+            InputState.WAITING -> return
+            InputState.INCORRECT -> item.timesIncorrect -= 1
+            InputState.CORRECT -> item.finished = false
         }
         inputState = InputState.WAITING
         notesShown = false
@@ -258,7 +250,7 @@ class Reviewer(
     @Serializable
     class Source(@Serializable(with = UUIDSerializer::class) val id: UUID, val name: String, val __typename: String)
     @Serializable
-    data class CardGroup(val cards: List<Card>, val iid: Int)
+    data class CardGroup(val cards: List<Card>, val iid: Long)
     @Serializable
     data class Card(
         val front: String,
@@ -275,10 +267,12 @@ class Reviewer(
         }
     }
 
-    private class ReviewGroup(reviewItem: ReviewItem) {
+    class ReviewResult(val item: ReviewItem, val timesIncorrect: List<Int>)
+
+    private fun ReviewResult(group: ReviewGroup) = ReviewResult(group.reviewItem, group.cards.map { it.timesIncorrect })
+
+    private class ReviewGroup(val reviewItem: ReviewItem) {
         val cards = reviewItem.cardGroup.cards.map { ReviewCard(it, reviewItem.source) }
-        val sourceId = reviewItem.source.id
-        val iid = reviewItem.cardGroup.iid
         fun isFinished() = cards.all { it.finished }
     }
     private class ReviewCard(val card: Card, val source: Source) {

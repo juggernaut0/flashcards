@@ -4,6 +4,7 @@ package components
 
 import FlashcardsService
 import asynclite.async
+import flashcards.api.v1.ReviewRequest
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers
 import kui.*
@@ -28,9 +29,10 @@ class ReviewScreen(private val service: FlashcardsService, private val deckId: U
         } else {
             markup().component(
                 Reviewer(
-                    service = service,
                     items = items,
-                    onComplete = { FlashcardsApp.pushState(ReviewSummary(service, it)) })
+                    onSubmit = { /*TODO*/ },
+                    onComplete = { FlashcardsApp.pushState(ReviewSummary(service, it)) }
+                )
             )
         }
     }

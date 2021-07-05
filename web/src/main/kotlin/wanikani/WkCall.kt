@@ -6,26 +6,33 @@ import kotlinx.browser.window
 import kotlinx.datetime.Instant
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 import org.w3c.fetch.Headers
 import org.w3c.fetch.RequestInit
 
 
-interface WkCall {
-    suspend fun fetchAssignments(): List<WkObject<Assignment>>
-
-    suspend fun fetchSubjects(): List<WkObject<Subject>>
-
-    suspend fun fetchReviews(): List<WkObject<Review>>
-}
-
-class HttpWkCall(private val apiKey: String) : WkCall {
+class HttpWkCall(private val apiKey: String) {
     private val json = Json { ignoreUnknownKeys = true }
 
-    override suspend fun fetchSubjects(): List<WkObject<Subject>> {
-        return getAll("https://api.wanikani.com/v2/subjects", Subject.serializer())
+    suspend fun fetchSubjects(): List<WkObject<Subject>> {
+        return getAll("https://api.wanikani.com/v2/subjects", JsonObject.serializer()).map { convertSubject(it) }
     }
 
-    override suspend fun fetchAssignments(): List<WkObject<Assignment>> {
+    suspend fun fetchNewSubjects(lastUpdated: Instant): List<WkObject<Subject>> {
+        return getAll("https://api.wanikani.com/v2/subjects?updated_after=$lastUpdated", JsonObject.serializer()).map { convertSubject(it) }
+    }
+
+    private fun convertSubject(subject: WkObject<JsonObject>): WkObject<Subject> {
+        val ser = when (subject.`object`) {
+            "radical" -> RadicalSubject.serializer()
+            "kanji" -> KanjiSubject.serializer()
+            "vocabulary" -> VocabularySubject.serializer()
+            else -> error("unknown subject type ${subject.`object`}")
+        }
+        return WkObject(subject.id, subject.`object`, json.decodeFromJsonElement(ser, subject.data))
+    }
+
+    suspend fun fetchAssignments(): List<WkObject<Assignment>> {
         return getAll("https://api.wanikani.com/v2/assignments", Assignment.serializer())
     }
 
@@ -33,12 +40,12 @@ class HttpWkCall(private val apiKey: String) : WkCall {
         return getAll("https://api.wanikani.com/v2/assignments?updated_after=$lastUpdated", Assignment.serializer())
     }
 
-    override suspend fun fetchReviews(): List<WkObject<Review>> {
-        return getAll("https://api.wanikani.com/v2/reviews", Review.serializer())
-    }
-
-    suspend fun fetchNewReviews(lastUpdated: Instant): List<WkObject<Review>> {
-        return getAll("https://api.wanikani.com/v2/reviews?updated_after=$lastUpdated", Review.serializer())
+    suspend fun startAssignment(assignmentId: Long, started_at: Instant? = null): WkObject<Assignment> {
+        val body = if (started_at == null) "{}" else "{\"started_at\": \"$started_at\"}"
+        console.warn("Would make resquest 'PUT https://api.wanikani.com/v2/assignments/$assignmentId/start' with body '$body'")
+        //val resp = request("https://api.wanikani.com/v2/assignments/$assignmentId/start", method = "PUT", body = body)
+        val resp = request("https://api.wanikani.com/v2/assignments/$assignmentId")
+        return json.decodeFromString(WkObject.serializer(Assignment.serializer()), resp)
     }
 
     private suspend fun <T> getAll(url: String, serializer: KSerializer<T>): List<WkObject<T>> {
@@ -58,12 +65,19 @@ class HttpWkCall(private val apiKey: String) : WkCall {
         return result
     }
 
-    private suspend fun request(url: String): String {
-        val resp = retry {
-            val resp = window.fetch(url, RequestInit(method = "GET", headers = Headers(arrayOf(
+    private suspend fun request(url: String, method: String = "GET", body: String? = null): String {
+        val reqInit = RequestInit(
+            method = method,
+            headers = Headers(arrayOf(
                 arrayOf("Authorization", "Bearer $apiKey"),
                 arrayOf("Wanikani-Revision", "20170710")
-            )))).await()
+            ))
+        )
+        if (body != null) {
+            reqInit.body = body
+        }
+        val resp = retry {
+            val resp = window.fetch(url, reqInit).await()
             if (resp.status.toInt() == 429) {
                 delay(1000)
                 null

@@ -7,6 +7,7 @@ import kana.isKana
 import kotlinx.browser.document
 import kotlinx.browser.window
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import kui.Component
 import kui.KeyboardEventArgs
 import kui.Props
@@ -14,6 +15,7 @@ import kui.classes
 import multiplatform.FetchException
 import multiplatform.UUID
 import multiplatform.UUIDSerializer
+import org.w3c.dom.Audio
 import org.w3c.dom.HTMLInputElement
 
 typealias ReviewSummaryData = MutableList<List<Pair<String, Boolean>>>
@@ -100,6 +102,10 @@ class Reviewer(
                     FuzzyMatchResult.ALLOW, FuzzyMatchResult.ALLOW_WITH_TYPO -> {
                         item.finished = true
                         inputState = InputState.CORRECT
+                        item.card.audioUrls.orEmpty().find { it.text == input }?.let {
+                            val audio = Audio(it.url)
+                            audio.oncanplaythrough = { audio.play() } // TODO preload audio?
+                        }
                         if (result == FuzzyMatchResult.ALLOW_WITH_TYPO) {
                             setMistakeText("Check your answer for typos.")
                         } else {
@@ -174,14 +180,19 @@ class Reviewer(
             div(classes("review-main")) {
                 div(classes("review-main-header")) {
                     span { +item.source.name }
-                    span { +"${summary.size}/$totalItems" }
+                    span { +"${summary.size}/$totalItems (${(summary.size.toDouble() * 100 / totalItems).toInt()})" }
                 }
-                val props = if (item.card.front.isCjk()) {
-                    Props(attrs = mapOf("lang" to "ja"))
+
+                if (item.card.front.startsWith("https://")) {
+                    img(Props(attrs = mapOf("width" to "96", "height" to "96")), src = item.card.front)
                 } else {
-                    Props.empty
+                    val props = if (item.card.front.isCjk()) {
+                        Props(attrs = mapOf("lang" to "ja"))
+                    } else {
+                        Props.empty
+                    }
+                    span(props) { +item.card.front }
                 }
-                span(props) { +item.card.front }
             }
             val prompt = item.card.prompt
             if (prompt != null) {
@@ -259,6 +270,7 @@ class Reviewer(
         val prompt: String? = null,
         val synonyms: List<String>? = null,
         val notes: String? = null,
+        @Transient val audioUrls: List<AudioUrl>? = null
     ) {
         fun toDisplayString(): String = buildString {
             append(front)
@@ -267,6 +279,7 @@ class Reviewer(
             }
         }
     }
+    class AudioUrl(val url: String, val text: String?)
 
     class ReviewResult(val item: ReviewItem, val timesIncorrect: List<Int>)
 

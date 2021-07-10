@@ -5,10 +5,7 @@ import asynclite.delay
 import kotlinx.browser.window
 import kotlinx.datetime.Instant
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
+import kotlinx.serialization.json.*
 import org.w3c.fetch.Headers
 import org.w3c.fetch.RequestInit
 
@@ -44,26 +41,29 @@ class HttpWkCall(private val apiKey: String) {
 
     suspend fun startAssignment(assignmentId: Long, started_at: Instant? = null): WkObject<Assignment> {
         val body = if (started_at == null) "{}" else "{\"started_at\": \"$started_at\"}"
-        console.warn("Would make request 'PUT https://api.wanikani.com/v2/assignments/$assignmentId/start' with body '$body'")
-        //val resp = request("https://api.wanikani.com/v2/assignments/$assignmentId/start", method = "PUT", body = body)
-        val resp = request("https://api.wanikani.com/v2/assignments/$assignmentId")
+        val resp = request("https://api.wanikani.com/v2/assignments/$assignmentId/start", method = "PUT", body = body)
         return json.decodeFromString(WkObject.serializer(Assignment.serializer()), resp)
     }
 
     suspend fun createReview(assignmentId: Long, meaningIncorrect: Int, readingIncorrect: Int, createdAt: Instant? = null): WkObject<Review> {
         val body = buildJsonObject {
-            put("assignment_id", assignmentId)
-            put("incorrect_meaning_answers", meaningIncorrect)
-            put("incorrect_reading_answers", readingIncorrect)
-            if (createdAt != null) {
-                put("created_at", createdAt.toString())
+            putJsonObject("review") {
+                put("assignment_id", assignmentId)
+                put("incorrect_meaning_answers", meaningIncorrect)
+                put("incorrect_reading_answers", readingIncorrect)
+                if (createdAt != null) {
+                    put("created_at", createdAt.toString())
+                }
             }
         }.toString()
-        console.warn("Would make request 'POST https://api.wanikani.com/v2/reviews' with body '$body'")
-        //val resp = request("https://api.wanikani.com/v2/reviews", method = "POST", body = body)
+
+        val resp = request("https://api.wanikani.com/v2/reviews", method = "POST", body = body)
+        return json.decodeFromString(WkObject.serializer(Review.serializer()), resp)
+
+        /*console.warn("Would make request 'POST https://api.wanikani.com/v2/reviews' with body '$body'")
         val assign = request("https://api.wanikani.com/v2/assignments/$assignmentId")
             .let { json.decodeFromString(WkObject.serializer(Assignment.serializer()), it) }
-        return WkObject(1337, "review", Review(1337, 0, 0), ResourcesUpdated(assignment = assign))
+        return WkObject(1337, "review", Review(1337, 0, 0), ResourcesUpdated(assignment = assign))*/
     }
 
     private suspend fun <T> getAll(url: String, serializer: KSerializer<T>): List<WkObject<T>> {
@@ -86,10 +86,11 @@ class HttpWkCall(private val apiKey: String) {
     private suspend fun request(url: String, method: String = "GET", body: String? = null): String {
         val reqInit = RequestInit(
             method = method,
-            headers = Headers(arrayOf(
+            headers = Headers(listOfNotNull(
                 arrayOf("Authorization", "Bearer $apiKey"),
-                arrayOf("Wanikani-Revision", "20170710")
-            ))
+                arrayOf("Wanikani-Revision", "20170710"),
+                arrayOf("Content-Type", "application/json; charset=utf-8").takeIf { method != "GET" }
+            ).toTypedArray())
         )
         if (body != null) {
             reqInit.body = body

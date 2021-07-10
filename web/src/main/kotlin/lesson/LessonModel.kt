@@ -28,6 +28,7 @@ class LessonModel(
                 is LessonScreenQuery.CardSource.WanikaniCardSource -> wanikaniService.forSource(it.id).getLessons().size
             }
         }
+        // TODO number of items based on deck settings
         val items = deck.sources
             .flatMapTake(totalLessons.coerceAtMost(5)) { source ->
                 when(source) {

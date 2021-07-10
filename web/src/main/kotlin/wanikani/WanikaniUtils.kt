@@ -1,5 +1,8 @@
 package wanikani
 
+import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.intOrNull
+import kotlinx.serialization.json.jsonPrimitive
 import review.Reviewer
 
 fun toCardGroup(assignment: WkObject<Assignment>, subject: WkObject<Subject>): Reviewer.CardGroup {
@@ -8,7 +11,7 @@ fun toCardGroup(assignment: WkObject<Assignment>, subject: WkObject<Subject>): R
         is RadicalSubject -> {
             val front = data.characters
                 ?: data.characterImages.find {
-                    it.contentType == "image/svg+xml" && it.metadata.inline_styles == true
+                    it.contentType == "image/svg+xml" && it.metadata["inline_styles"]?.jsonPrimitive?.booleanOrNull == true
                 }?.url
                 ?: data.slug
             val (pri, syn) = data.meanings.partition { it.primary }
@@ -55,6 +58,15 @@ fun toCardGroup(assignment: WkObject<Assignment>, subject: WkObject<Subject>): R
             val readingNotes = data.reading_mnemonic + data.reading_hint?.let { "\n\n$it" }.orEmpty()
             val (meaning, meaningSyn) = data.meanings.partition { it.primary }
             val meaningNotes = data.meaning_mnemonic + data.meaning_hint?.let { "\n\n$it" }.orEmpty()
+            val audioUrls = data.pronunciation_audios
+                .filter {
+                    val voiceActorId = it.metadata["voice_actor_id"]?.jsonPrimitive?.intOrNull
+                    val format = it.contentType
+                    voiceActorId == 1 && format == "audio/ogg"
+                }
+                .map {
+                    Reviewer.AudioUrl(it.url, it.metadata["pronunciation"]?.jsonPrimitive?.content)
+                }
             listOf(
                 Reviewer.Card(
                     front = front,
@@ -69,6 +81,7 @@ fun toCardGroup(assignment: WkObject<Assignment>, subject: WkObject<Subject>): R
                     prompt = "Vocab Reading",
                     synonyms = readingSyn.map { it.reading },
                     notes = readingNotes,
+                    audioUrls = audioUrls
                 ),
             )
         }

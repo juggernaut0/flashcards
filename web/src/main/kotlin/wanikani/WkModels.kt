@@ -3,6 +3,7 @@ package wanikani
 import kotlinx.datetime.Instant
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonObject
 
 @Serializable
 class WkCollection<T>(val pages: Pages, val data: List<WkObject<T>>)
@@ -34,7 +35,7 @@ sealed class Subject {
 @Serializable
 class RadicalSubject(
     val characters: String?,
-    @SerialName("character_images") val characterImages: List<CharacterImage>,
+    @SerialName("character_images") val characterImages: List<Resource>,
     override val level: Int,
     val meanings: List<SubjectMeaning>,
     @SerialName("meaning_mnemonic") val meaningMnemonic: String,
@@ -68,6 +69,7 @@ class VocabularySubject(
     val meanings: List<SubjectMeaning>,
     val meaning_mnemonic: String,
     val meaning_hint: String? = null,
+    val pronunciation_audios: List<Resource>,
     val readings: List<VocabReading>,
     val reading_mnemonic: String,
     val reading_hint: String? = null,
@@ -81,14 +83,11 @@ class VocabReading(
 )
 
 @Serializable
-class CharacterImage(
+class Resource(
     val url: String,
     @SerialName("content_type") val contentType: String,
-    val metadata: CharacterImageMetadata,
+    val metadata: JsonObject,
 )
-
-@Serializable
-class CharacterImageMetadata(val inline_styles: Boolean? = null)
 
 @Serializable
 class SubjectMeaning(val meaning: String, val primary: Boolean)

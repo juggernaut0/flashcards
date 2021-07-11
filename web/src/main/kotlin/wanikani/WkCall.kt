@@ -71,6 +71,14 @@ class HttpWkCall(private val apiKey: String) {
         return WkObject(1337, "review", Review(1337, 0, 0), ResourcesUpdated(assignment = assign))*/
     }
 
+    suspend fun fetchStudyMaterials(): List<WkObject<StudyMaterial>> {
+        return getAll("https://api.wanikani.com/v2/study_materials", StudyMaterial.serializer())
+    }
+
+    suspend fun fetchNewStudyMaterials(lastUpdated: Instant): List<WkObject<StudyMaterial>> {
+        return getAll("https://api.wanikani.com/v2/study_materials?updated_after=$lastUpdated", StudyMaterial.serializer())
+    }
+
     private suspend fun <T> getAll(url: String, serializer: KSerializer<T>): List<WkObject<T>> {
         val result = mutableListOf<WkObject<T>>()
         var collection = json.decodeFromString(WkCollection.serializer(serializer), request(url))

@@ -42,6 +42,7 @@ class WanikaniAccount private constructor(
     var lastUpdated: Instant?,
     private val assignments: MutableMap<Long, WkObject<Assignment>>,
     private val subjects: MutableMap<Long, WkObject<Subject>>,
+    private val studyMaterials: MutableMap<Long, WkObject<StudyMaterial>>, // subject_id to study material
     user: WkObject<User>?,
 ) {
     private val wkCall = HttpWkCall(apiKey)
@@ -55,7 +56,7 @@ class WanikaniAccount private constructor(
 
     // TODO loading progress indication in UI
     @OptIn(ExperimentalTime::class)
-    private suspend fun update(force: Boolean = false) {
+    suspend fun update(force: Boolean = false) {
         val lastUpdated = lastUpdated
         val now = Clock.System.now()
         if (!force && lastUpdated != null && now - lastUpdated < Duration.minutes(30)) return
@@ -64,9 +65,11 @@ class WanikaniAccount private constructor(
         if (lastUpdated == null) {
             wkCall.fetchAssignments().forEach { assignments[it.id] = it }
             wkCall.fetchSubjects().forEach { subjects[it.id] = it }
+            wkCall.fetchStudyMaterials().forEach { studyMaterials[it.data.subject_id] = it }
         } else {
             wkCall.fetchNewAssignments(lastUpdated).forEach { assignments[it.id] = it }
             wkCall.fetchNewSubjects(lastUpdated).forEach { subjects[it.id] = it }
+            wkCall.fetchNewStudyMaterials(lastUpdated).forEach { studyMaterials[it.data.subject_id] = it }
         }
         writeToStorage()
     }
@@ -92,6 +95,11 @@ class WanikaniAccount private constructor(
         return subjects[id]
     }
 
+    suspend fun getStudyMaterial(subjectId: Long): WkObject<StudyMaterial>? {
+        update()
+        return studyMaterials[subjectId]
+    }
+
     suspend fun startAssignment(assignmentId: Long) {
         val updatedAssign = wkCall.startAssignment(assignmentId, Clock.System.now())
         assignments[updatedAssign.id] = updatedAssign
@@ -104,7 +112,7 @@ class WanikaniAccount private constructor(
     }
 
     private suspend fun writeToStorage() {
-        val data = Data(lastUpdated!!, user, assignments.values.toList(), subjects.values.toList())
+        val data = Data(lastUpdated!!, user, assignments.values.toList(), subjects.values.toList(), studyMaterials.values.toList())
         console.log("start write")
         idbkeyval.set("flashcards-wk-$apiKey-data", Json.Default.encodeToDynamic(Data.serializer(), data)).await()
         console.log("end write")
@@ -116,7 +124,7 @@ class WanikaniAccount private constructor(
             val rawData = idbkeyval.get("flashcards-wk-$apiKey-data").await()
             console.log("end read")
             return if (rawData == null || rawData == undefined) {
-                WanikaniAccount(apiKey, null, mutableMapOf(), mutableMapOf(), null)
+                newEmpty(apiKey)
             } else {
                 try {
                     console.log("start decode")
@@ -127,13 +135,25 @@ class WanikaniAccount private constructor(
                         lastUpdated = data.lastUpdated,
                         assignments = data.assignments.associateByTo(mutableMapOf()) { it.id },
                         subjects = data.subjects.associateByTo(mutableMapOf()) { it.id },
+                        studyMaterials = data.studyMaterials.associateByTo(mutableMapOf()) { it.data.subject_id },
                         user = data.user,
                     )
                 } catch (e: SerializationException) {
                     console.error(e)
-                    WanikaniAccount(apiKey, null, mutableMapOf(), mutableMapOf(), null)
+                    newEmpty(apiKey)
                 }
             }
+        }
+
+        private fun newEmpty(apiKey: String): WanikaniAccount {
+            return WanikaniAccount(
+                apiKey = apiKey,
+                lastUpdated = null,
+                assignments = mutableMapOf(),
+                subjects = mutableMapOf(),
+                studyMaterials = mutableMapOf(),
+                user = null
+            )
         }
     }
 
@@ -142,7 +162,8 @@ class WanikaniAccount private constructor(
         val lastUpdated: Instant,
         val user: WkObject<User>,
         val assignments: List<WkObject<Assignment>>,
-        val subjects: List<WkObject<Subject>>
+        val subjects: List<WkObject<Subject>>,
+        val studyMaterials: List<WkObject<StudyMaterial>>,
     )
 
     private val assignmentComparator = Comparator<WkObject<Assignment>> { a, b ->

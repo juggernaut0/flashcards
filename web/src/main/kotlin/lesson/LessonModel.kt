@@ -37,8 +37,10 @@ class LessonModel(
                         val wkAccount = wanikaniService.forSource(source.id)
                         val itemSource = Reviewer.Source(source.id, source.name, "WanikaniCardSource")
                         wkAccount.getLessons().mapNotNull { assignment ->
-                            val subject = wkAccount.getSubject(assignment.data.subjectId) ?: return@mapNotNull null
-                            val group = toCardGroup(assignment, subject)
+                            val subjectId = assignment.data.subjectId
+                            val subject = wkAccount.getSubject(subjectId) ?: return@mapNotNull null
+                            val studyMaterial = wkAccount.getStudyMaterial(subjectId)
+                            val group = toCardGroup(assignment, subject, studyMaterial)
                             Reviewer.ReviewItem(itemSource, group)
                         }
                     }

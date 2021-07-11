@@ -1,6 +1,7 @@
 package components
 
 import WanikaniService
+import asynclite.async
 import components.SourceEditor.CardSource.WanikaniCardSource
 import flashcards.api.v1.CardSourceRequest
 import flashcards.api.v1.WanikaniCardSourceRequest
@@ -21,6 +22,13 @@ class WanikaniSourceEditor(private val service: WanikaniService, private val sou
         return apiKeyRegex.matches(apiKey)
     }
 
+    private fun refresh() {
+        async {
+            service.forSource(source.id).update(force = true)
+        }
+
+    }
+
     override fun render() {
         markup().div(classes("row")) {
             p {
@@ -37,6 +45,7 @@ class WanikaniSourceEditor(private val service: WanikaniService, private val sou
             } else if (!isKeyValid()) {
                 span(classes("error-alert")) { +"API Key invalid: double check it has been entered properly." }
             }
+            button(Props(classes = listOf("button-confirm"), click = ::refresh)) { +"Refresh WaniKani data" }
         }
     }
 

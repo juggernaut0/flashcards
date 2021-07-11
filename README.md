@@ -18,8 +18,6 @@
   * Review summary improvements
     * Split into two columns, correct vs missed
     * show new SRS stage
-  * **Wanikani support**
-    * User synonyms & notes
   * Add created_dt column to deck and card source tables, sort by created_dt when querying
   * Block-list and close-list support in reviews
     * Block-list: Hidden list of inputs that are rejected, even if close to an answer

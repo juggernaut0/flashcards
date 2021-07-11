@@ -100,6 +100,12 @@ class Review(
 )
 
 @Serializable
+class StudyMaterial(
+    val meaning_synonyms: List<String>,
+    val subject_id: Long,
+)
+
+@Serializable
 class User(
     val level: Int,
 )

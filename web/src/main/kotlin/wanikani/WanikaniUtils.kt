@@ -5,7 +5,8 @@ import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonPrimitive
 import review.Reviewer
 
-fun toCardGroup(assignment: WkObject<Assignment>, subject: WkObject<Subject>): Reviewer.CardGroup {
+fun toCardGroup(assignment: WkObject<Assignment>, subject: WkObject<Subject>, studyMaterial: WkObject<StudyMaterial>?): Reviewer.CardGroup {
+    val userSynonyms = studyMaterial?.data?.meaning_synonyms.orEmpty()
     val cards = when (val data = subject.data) {
         is RadicalSubject -> {
             val front = data.characters
@@ -18,7 +19,7 @@ fun toCardGroup(assignment: WkObject<Assignment>, subject: WkObject<Subject>): R
                 front = front,
                 back = pri.first().meaning,
                 prompt = "Radical Meaning",
-                synonyms = syn.map { it.meaning },
+                synonyms = syn.map { it.meaning } + userSynonyms,
                 notes = data.meaningMnemonic
             ))
         }
@@ -39,7 +40,7 @@ fun toCardGroup(assignment: WkObject<Assignment>, subject: WkObject<Subject>): R
                     front = front,
                     back = meaning.first().meaning,
                     prompt = "Kanji Meaning",
-                    synonyms = meaningSyn.map { it.meaning },
+                    synonyms = meaningSyn.map { it.meaning } + userSynonyms,
                     notes = meaningNotes
                 ),
                 Reviewer.Card(
@@ -71,7 +72,7 @@ fun toCardGroup(assignment: WkObject<Assignment>, subject: WkObject<Subject>): R
                     front = front,
                     back = meaning.first().meaning,
                     prompt = "Vocab Meaning",
-                    synonyms = meaningSyn.map { it.meaning },
+                    synonyms = meaningSyn.map { it.meaning } + userSynonyms,
                     notes = meaningNotes
                 ),
                 Reviewer.Card(

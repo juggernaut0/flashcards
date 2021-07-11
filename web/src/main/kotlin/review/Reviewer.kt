@@ -2,6 +2,7 @@ package review
 
 import asynclite.async
 import components.KanaInput
+import components.cardDetails
 import kana.isCjk
 import kana.isKana
 import kotlinx.browser.document
@@ -135,6 +136,7 @@ class Reviewer(
                     currentItem = cards.next()
                     inputState = InputState.WAITING
                     notesShown = false
+                    setMistakeText("")
                     render()
                     setInputFocus()
                 } else {
@@ -180,7 +182,7 @@ class Reviewer(
             div(classes("review-main")) {
                 div(classes("review-main-header")) {
                     span { +item.source.name }
-                    span { +"${summary.size}/$totalItems (${(summary.size.toDouble() * 100 / totalItems).toInt()})" }
+                    span { +"${summary.size}/$totalItems (${(summary.size.toDouble() * 100 / totalItems).toInt()}%)" }
                 }
 
                 if (item.card.front.startsWith("https://")) {
@@ -244,14 +246,7 @@ class Reviewer(
             }
             if (notesShown) {
                 div(Props(classes = listOf("review-notes-panel"), keyup = { handleSpecialKey(it, item) })) {
-                    h5 { +"Correct answer: ${item.card.back}" }
-                    hr()
-                    val notes = item.card.notes
-                    if (notes != null) {
-                        pre {
-                            +notes
-                        }
-                    }
+                    cardDetails(item.card)
                 }
             }
         }

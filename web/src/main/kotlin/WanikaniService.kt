@@ -70,6 +70,7 @@ class WanikaniAccount private constructor(
     suspend fun getReviews(): List<WkObject<Assignment>> {
         update()
         val now = Clock.System.now()
+        // TODO filter items that have moved past current level
         return assignments.values.filter {
             val availableAt = it.data.availableAt
             availableAt != null && availableAt <= now

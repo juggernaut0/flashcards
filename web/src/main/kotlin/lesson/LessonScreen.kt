@@ -4,6 +4,7 @@ import asynclite.async
 import components.FlashcardsApp
 import components.Header
 import components.Modal
+import components.cardDetails
 import kui.*
 import review.ReviewSummaryData
 import review.Reviewer
@@ -69,10 +70,7 @@ class LessonScreen(private val model: LessonModel) : Component() {
                     div(classes("row")) {
                         for (card in item.cardGroup.cards) {
                             h3 { +card.toDisplayString() }
-                            h4 { +card.back }
-                            if (!card.notes.isNullOrBlank()) {
-                                p { +card.notes }
-                            }
+                            cardDetails(card)
                             hr()
                         }
                     }

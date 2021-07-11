@@ -6,7 +6,6 @@ import kotlinx.serialization.json.jsonPrimitive
 import review.Reviewer
 
 fun toCardGroup(assignment: WkObject<Assignment>, subject: WkObject<Subject>): Reviewer.CardGroup {
-    // TODO for notes, remove or process WK markup
     val cards = when (val data = subject.data) {
         is RadicalSubject -> {
             val front = data.characters

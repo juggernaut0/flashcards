@@ -13,6 +13,11 @@ import org.w3c.fetch.RequestInit
 class HttpWkCall(private val apiKey: String) {
     private val json = Json { ignoreUnknownKeys = true }
 
+    suspend fun fetchUser(): WkObject<User> {
+        val resp = request("https://api.wanikani.com/v2/user")
+        return json.decodeFromString(WkObject.serializer(User.serializer()), resp)
+    }
+
     suspend fun fetchSubjects(): List<WkObject<Subject>> {
         return getAll("https://api.wanikani.com/v2/subjects", JsonObject.serializer()).map { convertSubject(it) }
     }

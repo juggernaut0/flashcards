@@ -42,8 +42,16 @@ class WanikaniAccount private constructor(
     var lastUpdated: Instant?,
     private val assignments: MutableMap<Long, WkObject<Assignment>>,
     private val subjects: MutableMap<Long, WkObject<Subject>>,
+    user: WkObject<User>?,
 ) {
     private val wkCall = HttpWkCall(apiKey)
+    private lateinit var user: WkObject<User>
+
+    init {
+        if (user != null) {
+            this.user = user
+        }
+    }
 
     // TODO loading progress indication in UI
     @OptIn(ExperimentalTime::class)
@@ -52,6 +60,7 @@ class WanikaniAccount private constructor(
         val now = Clock.System.now()
         if (!force && lastUpdated != null && now - lastUpdated < Duration.minutes(30)) return
         this.lastUpdated = now
+        user = wkCall.fetchUser()
         if (lastUpdated == null) {
             wkCall.fetchAssignments().forEach { assignments[it.id] = it }
             wkCall.fetchSubjects().forEach { subjects[it.id] = it }
@@ -70,10 +79,11 @@ class WanikaniAccount private constructor(
     suspend fun getReviews(): List<WkObject<Assignment>> {
         update()
         val now = Clock.System.now()
-        // TODO filter items that have moved past current level
+        val userLevel = user.data.level
         return assignments.values.filter {
+            val level = subjects[it.data.subjectId]?.data?.level ?: 61
             val availableAt = it.data.availableAt
-            availableAt != null && availableAt <= now
+            userLevel >= level && availableAt != null && availableAt <= now
         }
     }
 
@@ -94,7 +104,7 @@ class WanikaniAccount private constructor(
     }
 
     private suspend fun writeToStorage() {
-        val data = Data(lastUpdated!!, assignments.values.toList(), subjects.values.toList())
+        val data = Data(lastUpdated!!, user, assignments.values.toList(), subjects.values.toList())
         console.log("start write")
         idbkeyval.set("flashcards-wk-$apiKey-data", Json.Default.encodeToDynamic(Data.serializer(), data)).await()
         console.log("end write")
@@ -106,7 +116,7 @@ class WanikaniAccount private constructor(
             val rawData = idbkeyval.get("flashcards-wk-$apiKey-data").await()
             console.log("end read")
             return if (rawData == null || rawData == undefined) {
-                WanikaniAccount(apiKey, null, mutableMapOf(), mutableMapOf())
+                WanikaniAccount(apiKey, null, mutableMapOf(), mutableMapOf(), null)
             } else {
                 try {
                     console.log("start decode")
@@ -116,18 +126,24 @@ class WanikaniAccount private constructor(
                         apiKey = apiKey,
                         lastUpdated = data.lastUpdated,
                         assignments = data.assignments.associateByTo(mutableMapOf()) { it.id },
-                        subjects = data.subjects.associateByTo(mutableMapOf()) { it.id }
+                        subjects = data.subjects.associateByTo(mutableMapOf()) { it.id },
+                        user = data.user,
                     )
                 } catch (e: SerializationException) {
                     console.error(e)
-                    WanikaniAccount(apiKey, null, mutableMapOf(), mutableMapOf())
+                    WanikaniAccount(apiKey, null, mutableMapOf(), mutableMapOf(), null)
                 }
             }
         }
     }
 
     @Serializable
-    private class Data(val lastUpdated: Instant, val assignments: List<WkObject<Assignment>>, val subjects: List<WkObject<Subject>>)
+    private class Data(
+        val lastUpdated: Instant,
+        val user: WkObject<User>,
+        val assignments: List<WkObject<Assignment>>,
+        val subjects: List<WkObject<Subject>>
+    )
 
     private val assignmentComparator = Comparator<WkObject<Assignment>> { a, b ->
         SubjectComparator.compare(subjects[a.data.subjectId]!!, subjects[b.data.subjectId]!!)

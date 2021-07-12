@@ -504,6 +504,9 @@ label {
     margin: auto;
 }
 
+.em {
+    font-style: italic;
+}
 """
 
 private const val modalCss = """

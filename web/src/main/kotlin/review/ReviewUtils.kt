@@ -1,10 +1,12 @@
+package review
+
 import kana.isKana
 import kana.kanaToRomaji
 
 @Suppress("NAME_SHADOWING")
 fun fuzzyMatch(given: String, expected: String): FuzzyMatchResult {
-    val given = given.trim().lowercase()
-    val expected = expected.trim().lowercase()
+    val given = given.trim().lowercase().replace(removeFromAnswerRegex, "")
+    val expected = expected.trim().lowercase().replace(removeFromAnswerRegex, "")
 
     if (given == expected) return FuzzyMatchResult.ALLOW
     if (given.isBlank()) return FuzzyMatchResult.CLOSE
@@ -25,6 +27,8 @@ fun fuzzyMatch(given: String, expected: String): FuzzyMatchResult {
         else FuzzyMatchResult.REJECT
     }
 }
+
+private val removeFromAnswerRegex = Regex("[,.\\-']")
 
 enum class FuzzyMatchResult {
     ALLOW, ALLOW_WITH_TYPO, REJECT, CLOSE, KANA_EXPECTED;

@@ -28,3 +28,6 @@ class Deck(val id: UUID, val name: String, val sourceIds: List<UUID> = emptyList
 
 @Serializable
 class ReviewItem(val sourceId: UUID, val cardGroup: CardGroup)
+
+@Serializable
+data class IdParam(@Serializable(with = UUIDSerializer::class) val id: UUID)

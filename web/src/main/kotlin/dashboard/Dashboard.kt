@@ -1,22 +1,17 @@
-@file:UseSerializers(UUIDSerializer::class)
+package dashboard
 
-package components
-
-import FlashcardsService
 import asynclite.async
+import components.*
 import flashcards.api.v1.DeckRequest
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.UseSerializers
 import kui.*
-import multiplatform.UUID
-import multiplatform.UUIDSerializer
 
-class Dashboard(private val service: FlashcardsService) : Component() {
-    private var data by renderOnSet(DashboardQuery(listOf(), listOf()))
+class Dashboard(private val model: DashboardModel) : Component() {
+    private var data: DashboardData? = null
 
     init {
         async {
-            data = service.query(DashboardQuery.serializer())
+            data = model.getData()
+            render()
         }
     }
 
@@ -35,13 +30,18 @@ class Dashboard(private val service: FlashcardsService) : Component() {
         }
         async {
             if(Modal.suspendShow("Create deck", contents)) {
-                val deck = service.createDeck(DeckRequest(contents.name, emptyList()))
-                FlashcardsApp.pushState(DeckOverview(service, deck))
+                val deck = model.createDeck(DeckRequest(contents.name, emptyList()))
+                FlashcardsApp.pushDeckOverview(deck)
             }
         }
     }
 
     override fun render() {
+        val data = data
+        if (data == null) {
+            markup().p { +"Loading..." }
+            return
+        }
         val sources = data.sources
         val decks = data.decks
         markup().div(classes("container")) {
@@ -66,14 +66,14 @@ class Dashboard(private val service: FlashcardsService) : Component() {
                 }
                 button(Props(
                     classes = listOf("dash-tile", "dash-tile-add"),
-                    click = { FlashcardsApp.pushState(SourceCreation(service)) }
+                    click = { FlashcardsApp.pushSourceCreation() }
                 )) { +"+" }
             }
         }
     }
 
-    private fun MarkupBuilder.deckTile(deck: Deck) {
-        button(Props(classes = listOf("dash-tile"), click = { FlashcardsApp.pushState(DeckOverview(service, deck.id)) })) {
+    private fun MarkupBuilder.deckTile(deck: DashboardDeck) {
+        button(Props(classes = listOf("dash-tile"), click = { FlashcardsApp.pushDeckOverview(deck.id) })) {
             div(classes("dash-tile-content")) {
                 div(classes("dash-tile-title")) { +deck.name }
                 div(classes("dash-tile-deck-indicators")) {
@@ -84,8 +84,10 @@ class Dashboard(private val service: FlashcardsService) : Component() {
         }
     }
 
-    private fun MarkupBuilder.sourceTile(source: CardSource) {
-        button(Props(classes = listOf("dash-tile"), click = { FlashcardsApp.pushState(SourceEditor(service, source.id)) })) {
+    private fun MarkupBuilder.sourceTile(source: DashboardQuery.CardSource) {
+        button(Props(classes = listOf("dash-tile"), click = {
+            FlashcardsApp.pushSourceEditor(source.id)
+        })) {
             div(classes("dash-tile-content")) {
                 div(classes("dash-tile-title")) { +source.name }
                 div {
@@ -97,11 +99,4 @@ class Dashboard(private val service: FlashcardsService) : Component() {
             }
         }
     }
-
-    @Serializable
-    private class DashboardQuery(val decks: List<Deck>, val sources: List<CardSource>)
-    @Serializable
-    private class Deck(val id: UUID, val name: String, val lessons: Int, val reviews: Int)
-    @Serializable
-    private class CardSource(val id: UUID, val name: String, val __typename: String)
 }

@@ -10,6 +10,8 @@ dependencies {
     implementation("com.github.juggernaut0.kui:kui:0.11.0")
     implementation("dev.twarner.auth:auth-ui:3")
 
+    implementation(npm("idb-keyval", "5.0.6"))
+
     testImplementation(kotlin("test-js"))
 }
 
@@ -27,6 +29,11 @@ kotlin {
                 moduleKind = "commonjs"
                 sourceMap = true
                 sourceMapEmbedSources = "always"
+            }
+        }
+        sourceSets.all {
+            languageSettings {
+                useExperimentalAnnotation("kotlin.RequiresOptIn")
             }
         }
         binaries.executable()

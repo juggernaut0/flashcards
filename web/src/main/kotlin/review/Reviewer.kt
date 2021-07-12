@@ -1,14 +1,14 @@
-package components
+package review
 
-import FlashcardsService
 import asynclite.async
-import flashcards.api.v1.ReviewRequest
-import fuzzyMatch
+import components.KanaInput
+import components.cardDetails
 import kana.isCjk
 import kana.isKana
 import kotlinx.browser.document
 import kotlinx.browser.window
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import kui.Component
 import kui.KeyboardEventArgs
 import kui.Props
@@ -16,15 +16,15 @@ import kui.classes
 import multiplatform.FetchException
 import multiplatform.UUID
 import multiplatform.UUIDSerializer
+import org.w3c.dom.Audio
 import org.w3c.dom.HTMLInputElement
 
 typealias ReviewSummaryData = MutableList<List<Pair<String, Boolean>>>
 
 class Reviewer(
-    private val service: FlashcardsService,
     items: List<ReviewItem>,
     private val onComplete: (ReviewSummaryData) -> Unit,
-    private val lessonMode: Boolean = false
+    private val onSubmit: suspend (ReviewResult) -> Unit,
 ) : Component() {
     init {
         require(items.isNotEmpty()) { "items must not be empty" }
@@ -62,12 +62,7 @@ class Reviewer(
                     async {
                         try {
                             summary.add(item.cards.map { it.card.toDisplayString() to (it.timesIncorrect == 0) })
-                            val timesIncorrect = if (lessonMode) List(item.cards.size) { 0 } else item.cards.map { it.timesIncorrect }
-                            service.submitReview(
-                                sourceId = item.sourceId,
-                                iid = item.iid,
-                                request = ReviewRequest(timesIncorrect)
-                            )
+                            onSubmit(ReviewResult(item))
                         } catch (e: FetchException) {
                             console.error(e)
                             errored = true
@@ -108,8 +103,14 @@ class Reviewer(
                     FuzzyMatchResult.ALLOW, FuzzyMatchResult.ALLOW_WITH_TYPO -> {
                         item.finished = true
                         inputState = InputState.CORRECT
+                        item.card.audioUrls.orEmpty().find { it.text == input }?.let {
+                            val audio = Audio(it.url)
+                            audio.oncanplaythrough = { audio.play() } // TODO preload audio?
+                        }
                         if (result == FuzzyMatchResult.ALLOW_WITH_TYPO) {
                             setMistakeText("Check your answer for typos.")
+                        } else if (!item.card.synonyms.isNullOrEmpty()) {
+                            setMistakeText("Check notes for additional answers.")
                         } else {
                             setMistakeText("")
                         }
@@ -137,6 +138,7 @@ class Reviewer(
                     currentItem = cards.next()
                     inputState = InputState.WAITING
                     notesShown = false
+                    setMistakeText("")
                     render()
                     setInputFocus()
                 } else {
@@ -182,14 +184,19 @@ class Reviewer(
             div(classes("review-main")) {
                 div(classes("review-main-header")) {
                     span { +item.source.name }
-                    span { +"${summary.size}/$totalItems" }
+                    span { +"${summary.size}/$totalItems (${(summary.size.toDouble() * 100 / totalItems).toInt()}%)" }
                 }
-                val props = if (item.card.front.isCjk()) {
-                    Props(attrs = mapOf("lang" to "ja"))
+
+                if (item.card.front.startsWith("https://")) {
+                    img(Props(attrs = mapOf("width" to "96", "height" to "96")), src = item.card.front)
                 } else {
-                    Props.empty
+                    val props = if (item.card.front.isCjk()) {
+                        Props(attrs = mapOf("lang" to "ja"))
+                    } else {
+                        Props.empty
+                    }
+                    span(props) { +item.card.front }
                 }
-                span(props) { +item.card.front }
             }
             val prompt = item.card.prompt
             if (prompt != null) {
@@ -241,14 +248,7 @@ class Reviewer(
             }
             if (notesShown) {
                 div(Props(classes = listOf("review-notes-panel"), keyup = { handleSpecialKey(it, item) })) {
-                    h5 { +"Correct answer: ${item.card.back}" }
-                    hr()
-                    val notes = item.card.notes
-                    if (notes != null) {
-                        pre {
-                            +notes
-                        }
-                    }
+                    cardDetails(item.card)
                 }
             }
         }
@@ -259,7 +259,7 @@ class Reviewer(
     @Serializable
     class Source(@Serializable(with = UUIDSerializer::class) val id: UUID, val name: String, val __typename: String)
     @Serializable
-    data class CardGroup(val cards: List<Card>, val iid: Int)
+    data class CardGroup(val cards: List<Card>, val iid: Long)
     @Serializable
     data class Card(
         val front: String,
@@ -267,6 +267,7 @@ class Reviewer(
         val prompt: String? = null,
         val synonyms: List<String>? = null,
         val notes: String? = null,
+        @Transient val audioUrls: List<AudioUrl>? = null
     ) {
         fun toDisplayString(): String = buildString {
             append(front)
@@ -275,11 +276,14 @@ class Reviewer(
             }
         }
     }
+    class AudioUrl(val url: String, val text: String?)
 
-    private class ReviewGroup(reviewItem: ReviewItem) {
+    class ReviewResult(val item: ReviewItem, val timesIncorrect: List<Int>)
+
+    private fun ReviewResult(group: ReviewGroup) = ReviewResult(group.reviewItem, group.cards.map { it.timesIncorrect })
+
+    private class ReviewGroup(val reviewItem: ReviewItem) {
         val cards = reviewItem.cardGroup.cards.map { ReviewCard(it, reviewItem.source) }
-        val sourceId = reviewItem.source.id
-        val iid = reviewItem.cardGroup.iid
         fun isFinished() = cards.all { it.finished }
     }
     private class ReviewCard(val card: Card, val source: Source) {

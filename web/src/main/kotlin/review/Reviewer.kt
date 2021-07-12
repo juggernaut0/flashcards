@@ -109,6 +109,8 @@ class Reviewer(
                         }
                         if (result == FuzzyMatchResult.ALLOW_WITH_TYPO) {
                             setMistakeText("Check your answer for typos.")
+                        } else if (!item.card.synonyms.isNullOrEmpty()) {
+                            setMistakeText("Check notes for additional answers.")
                         } else {
                             setMistakeText("")
                         }

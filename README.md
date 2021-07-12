@@ -15,6 +15,7 @@
 ## TODO
 
 * Features
+  * Deck overview screen: Review Forecast
   * Review summary improvements
     * Split into two columns, correct vs missed
     * show new SRS stage
@@ -22,9 +23,9 @@
   * Block-list and close-list support in reviews
     * Block-list: Hidden list of inputs that are rejected, even if close to an answer
     * close-list: Hidden list of inputs that are close but not correct, e.g., reading for a meaning card
+  * Improve WK data load performance
   * QoL: Make custom card editor easier to create a large amount of cards
     * Maybe JSON/CSV import?
-  * Deck overview screen: Review Forecast
   * Review screen: Wrap up
   * View SRS stages on custom card editor
   * QoL: Add synonyms from review screen details foldout

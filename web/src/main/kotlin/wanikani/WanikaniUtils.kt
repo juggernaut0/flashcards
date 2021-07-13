@@ -25,8 +25,10 @@ fun toCardGroup(assignment: WkObject<Assignment>, subject: WkObject<Subject>, st
         }
         is KanjiSubject -> {
             val front = data.characters
-            val (reading, readingSyn) = data.readings.filter { it.accepted_answer }.partition { it.primary }
-            val readingPrompt = when (reading.first().type) {
+            val readings = data.readings.filter { it.accepted_answer }
+            val reading = readings.first()
+            val readingSyn = readings.subList(1, readings.size)
+            val readingPrompt = when (reading.type) {
                 "kunyomi" -> "Kanji Kun'yomi"
                 "onyomi" -> "Kanji On'yomi"
                 "nanori" -> "Kanji Nanori"
@@ -45,7 +47,7 @@ fun toCardGroup(assignment: WkObject<Assignment>, subject: WkObject<Subject>, st
                 ),
                 Reviewer.Card(
                     front = front,
-                    back = reading.first().reading,
+                    back = reading.reading,
                     prompt = readingPrompt,
                     synonyms = readingSyn.map { it.reading },
                     notes = readingNotes,

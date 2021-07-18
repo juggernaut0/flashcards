@@ -48,6 +48,7 @@ class CardSourceDao @Inject constructor() {
                 val customCards = it.into(CUSTOM_CARD_SOURCE_CARDS)
                 CardSourceData(cardSourceRecord, customCards)
             }
+            .sortedWith(compareBy(nullsLast(naturalOrder())) { it.cardSource.index })
     }
 
     suspend fun getSource(dsl: DSLContext, accountId: UUID, sourceId: UUID, lock: Boolean = false): CardSourceData? {

@@ -255,6 +255,27 @@ body {
     color: $btnEditHoverColor;
 }
 
+.source-list-button {
+    border: 0;
+    background-color: transparent;
+    color: $borderGray;
+    font-weight: bold;
+    font-size: 20;
+    width: 19px;
+}
+
+.source-list-button-del:hover {
+    color: $btnDangerHoverColor;
+}
+
+.source-list-button-move:hover {
+    color: $btnEditHoverColor;
+}
+
+.source-list-button-blank {
+    display: inline-block;
+}
+
 .button-add-card {
     background-color: $btnLightColor;
     border: 0;

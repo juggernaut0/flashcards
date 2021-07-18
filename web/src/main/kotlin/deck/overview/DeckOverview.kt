@@ -23,23 +23,34 @@ class DeckOverview(private val model: DeckOverviewModel) : Component() {
         render()
     }
 
-    private fun addSource() {
-        val deck = data ?: return
-        val selectedSource = selectedSource ?: return
-        val newSources = (deck.sources + selectedSource).map { it.id }
+    private fun updateSources(newSources: List<UUID>) {
         async {
             model.updateSources(newSources)
             updateJunk()
         }
     }
 
+    private fun addSource() {
+        val deck = data ?: return
+        val selectedSource = selectedSource ?: return
+        val newSources = (deck.sources + selectedSource).map { it.id }
+        updateSources(newSources)
+    }
+
     private fun removeSource(id: UUID) {
         val deck = data ?: return
         val newSources = deck.sources.filterNot { it.id == id }.map { it.id }
-        async {
-            model.updateSources(newSources)
-            updateJunk()
-        }
+        updateSources(newSources)
+    }
+
+    private fun moveSourceUp(i: Int) {
+        if (i == 0) return
+        val deck = data ?: return
+        val newSources = deck.sources.mapTo(mutableListOf()) { it.id }
+        val tmp = newSources[i-1]
+        newSources[i-1] = newSources[i]
+        newSources[i] = tmp
+        updateSources(newSources)
     }
 
     override fun render() {
@@ -62,12 +73,32 @@ class DeckOverview(private val model: DeckOverviewModel) : Component() {
                 )) { +if(deck.reviews == 0) "No reviews available" else "Start ${deck.reviews} reviews" }
                 h3 { +"Sources used in this deck" }
                 ul {
-                    for (source in deck.sources) {
+                    for ((i, source) in deck.sources.withIndex()) {
                         li {
                             button(Props(
-                                classes = listOf("card-button", "card-button-del"),
+                                classes = listOf("source-list-button", "source-list-button-del"),
                                 click = { removeSource(source.id) },
                             )) { +"\u00d7" }
+                            if (i != 0) {
+                                button(
+                                    Props(
+                                        classes = listOf("source-list-button", "source-list-button-move"),
+                                        click = { moveSourceUp(i) },
+                                    )
+                                ) { +"\u25B4" }
+                            } else {
+                                span(classes("source-list-button", "source-list-button-blank")) {}
+                            }
+                            if (i != deck.sources.lastIndex) {
+                                button(
+                                    Props(
+                                        classes = listOf("source-list-button", "source-list-button-move"),
+                                        click = { moveSourceUp(i+1) },
+                                    )
+                                ) { +"\u25BE" }
+                            } else {
+                                span(classes("source-list-button", "source-list-button-blank")) {}
+                            }
                             +source.name
                         }
                     }

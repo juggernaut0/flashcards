@@ -19,7 +19,9 @@
   * Review summary improvements
     * Split into two columns, correct vs missed
     * show new SRS stage
-  * Add created_dt column to deck and card source tables, sort by created_dt when querying
+  * Allow reordering of sources & decks in account
+  * Custom card source: Allow reordering groups
+  * Allow disabling lessons for certain sources per deck
   * Block-list and close-list support in reviews
     * Block-list: Hidden list of inputs that are rejected, even if close to an answer
     * close-list: Hidden list of inputs that are close but not correct, e.g., reading for a meaning card

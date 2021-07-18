@@ -5,6 +5,7 @@ import flashcards.db.jooq.tables.records.DeckRecord
 import kotlinx.coroutines.future.await
 import multiplatform.ktor.BadRequestException
 import org.jooq.DSLContext
+import org.jooq.Record
 import java.util.*
 import javax.inject.Inject
 
@@ -26,37 +27,38 @@ class DeckDao @Inject constructor() {
     }
 
     suspend fun getDecks(dsl: DSLContext, accountId: UUID): List<DeckData> {
-        return dsl.select(DECK.asterisk(), DECK_CARD_SOURCE.SOURCE_ID)
+        return dsl.select(DECK.asterisk(), DECK_CARD_SOURCE.SOURCE_ID, DECK_CARD_SOURCE.INDEX)
             .from(DECK.leftJoin(DECK_CARD_SOURCE).onKey())
             .where(DECK.OWNER_ID.eq(accountId))
             .fetchAsync()
             .await()
             .groupBy { it[DECK.ID] }
-            .map { (_, records) ->
-                val deckRecord = records.first().into(DECK)
-                val sources = records.map { it[DECK_CARD_SOURCE.SOURCE_ID] }
-                DeckData(deckRecord, sources)
-            }
+            .map { (_, records) -> toDeckData(records) }
+            .sortedWith(compareBy(nullsLast(naturalOrder())) { it.deckRecord.index })
     }
 
     suspend fun getDeck(dsl: DSLContext, accountId: UUID, deckId: UUID): DeckData? {
-        return dsl.select(DECK.asterisk(), DECK_CARD_SOURCE.SOURCE_ID)
+        return dsl.select(DECK.asterisk(), DECK_CARD_SOURCE.SOURCE_ID, DECK_CARD_SOURCE.INDEX)
             .from(DECK.leftJoin(DECK_CARD_SOURCE).onKey())
             .where(DECK.OWNER_ID.eq(accountId))
             .and(DECK.ID.eq(deckId))
             .fetchAsync()
             .await()
             .takeIf { it.isNotEmpty }
-            ?.let { records ->
-                val first = records.first()
-                val deckRecord = first.into(DECK)
-                val sources = if (first[DECK_CARD_SOURCE.SOURCE_ID] != null) { // first sourceId null means no sources
-                    records.map { it[DECK_CARD_SOURCE.SOURCE_ID] }
-                } else {
-                    emptyList()
-                }
-                DeckData(deckRecord, sources)
-            }
+            ?.let { toDeckData(it) }
+    }
+
+    private fun toDeckData(records: List<Record>): DeckData {
+        val first = records.first()
+        val deckRecord = first.into(DECK)
+        val sources = if (first[DECK_CARD_SOURCE.SOURCE_ID] != null) { // first sourceId null means no sources
+            records
+                .sortedWith(compareBy(nullsLast(naturalOrder())) { it[DECK_CARD_SOURCE.INDEX] })
+                .map { it[DECK_CARD_SOURCE.SOURCE_ID] }
+        } else {
+            emptyList()
+        }
+        return DeckData(deckRecord, sources)
     }
 
     suspend fun updateDeck(dsl: DSLContext, accountId: UUID, deckId: UUID, name: String?, sources: List<UUID>?): Boolean {
@@ -102,8 +104,8 @@ class DeckDao @Inject constructor() {
             .await()
 
         dsl.insertInto(DECK_CARD_SOURCE)
-            .columns(DECK_CARD_SOURCE.DECK_ID, DECK_CARD_SOURCE.SOURCE_ID)
-            .let { sources.fold(it) { sql, sourceId -> sql.values(deckId, sourceId) } }
+            .columns(DECK_CARD_SOURCE.DECK_ID, DECK_CARD_SOURCE.SOURCE_ID, DECK_CARD_SOURCE.INDEX)
+            .let { sources.foldIndexed(it) { i, sql, sourceId -> sql.values(deckId, sourceId, i) } }
             .executeAsync()
             .await()
     }

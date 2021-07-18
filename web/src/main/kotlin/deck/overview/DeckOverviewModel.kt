@@ -20,7 +20,11 @@ class DeckOverviewModel(
 ) {
     suspend fun getData(): DeckOverviewData {
         val query = flashcardsService.query(DeckOverviewQuery.serializer(), "id" to deckId)
-        val (added, unadded) = query.sources.partition { it.id in query.deck.sourceIds }
+        val unadded = query.sources.toMutableList()
+        val added = mutableListOf<DeckOverviewQuery.CardSource>()
+        for (sourceId in query.deck.sourceIds) {
+            added.add(unadded.removeFirst { it.id == sourceId })
+        }
         val lessons = added.sumOf {
             when (it) {
                 is DeckOverviewQuery.CardSource.CustomCardSource -> it.lessons
@@ -40,6 +44,18 @@ class DeckOverviewModel(
             lessons = lessons,
             reviews = reviews,
         )
+    }
+
+    private inline fun <T> MutableList<T>.removeFirst(predicate: (T) -> Boolean): T {
+        val iter = listIterator()
+        while (iter.hasNext()) {
+            val e = iter.next()
+            if (predicate(e)) {
+                iter.remove()
+                return e
+            }
+        }
+        throw NoSuchElementException()
     }
 
     suspend fun updateSources(newSources: List<UUID>) {

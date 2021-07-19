@@ -40,9 +40,9 @@ class WanikaniService {
 class WanikaniAccount private constructor(
     val apiKey: String,
     var lastUpdated: Instant?,
-    private val assignments: MutableMap<Long, WkObject<Assignment>>,
-    private val subjects: MutableMap<Long, WkObject<Subject>>,
-    private val studyMaterials: MutableMap<Long, WkObject<StudyMaterial>>, // subject_id to study material
+    private val assignments: MutableMap<Long, dynamic>,
+    private val subjects: MutableMap<Long, dynamic>,
+    private val studyMaterials: MutableMap<Long, dynamic>, // subject_id to study material
     user: WkObject<User>?,
 ) {
     private val wkCall = HttpWkCall(apiKey)
@@ -76,7 +76,10 @@ class WanikaniAccount private constructor(
 
     suspend fun getLessons(): List<WkObject<Assignment>> {
         update()
-        return assignments.values.filter { it.data.srsStage == 0 }.sortedWith(assignmentComparator)
+        return assignments.values
+            .filter { it.dynamicValue.data.srsStage == 0 }
+            .map { it.value }
+            .sortedWith(assignmentComparator)
     }
 
     suspend fun getReviews(): List<WkObject<Assignment>> {
@@ -84,59 +87,68 @@ class WanikaniAccount private constructor(
         val now = Clock.System.now()
         val userLevel = user.data.level
         return assignments.values.filter {
-            val level = subjects[it.data.subjectId]?.data?.level ?: 61
-            val availableAt = it.data.availableAt
+            val data = it.dynamicValue.data
+            val level = subject(data.subjectId)?.data?.level ?: 61
+            val availableAt = data.availableAt
             userLevel >= level && availableAt != null && availableAt <= now
-        }
+        }.map { it.value }
     }
+
+    private fun subject(id: Long): WkObject<Subject>? = subjects[id]?.value
 
     suspend fun getSubject(id: Long): WkObject<Subject>? {
         update()
-        return subjects[id]
+        return subject(id)
     }
 
     suspend fun getStudyMaterial(subjectId: Long): WkObject<StudyMaterial>? {
         update()
-        return studyMaterials[subjectId]
+        //return studyMaterials[subjectId]
+        return null
     }
 
     suspend fun startAssignment(assignmentId: Long) {
         val updatedAssign = wkCall.startAssignment(assignmentId, Clock.System.now())
-        assignments[updatedAssign.id] = updatedAssign
+        assignments[updatedAssign.id] = DynamicLazy.value(updatedAssign, assignmentSerializer)
     }
 
     suspend fun createReview(assignmentId: Long, meaningIncorrect: Int, readingIncorrect: Int) {
         val review = wkCall.createReview(assignmentId, meaningIncorrect, readingIncorrect, Clock.System.now())
         val assignment = review.resources_updated?.assignment!!
-        assignments[assignment.id] = assignment
+        assignments[assignment.id] = DynamicLazy.value(assignment, assignmentSerializer)
     }
 
     private suspend fun writeToStorage() {
-        val data = Data(lastUpdated!!, user, assignments.values.toList(), subjects.values.toList(), studyMaterials.values.toList())
+        val data = js("{}")
+        data.lastUpdated = lastUpdated?.toString()
+        data.assignments = assignments.values.map { it.dynamicValue }.toTypedArray()
+        data.subjects = subjects.values.map { it.dynamicValue }.toTypedArray()
+        data.studyMaterials = emptyArray<dynamic>()
+        data.user = user
         console.log("start write")
-        idbkeyval.set("flashcards-wk-$apiKey-data", Json.Default.encodeToDynamic(Data.serializer(), data)).await()
+        idbkeyval.set("flashcards-wk-$apiKey-data", data).await()
         console.log("end write")
     }
 
     companion object {
+        private val assignmentSerializer = WkObject.serializer(Assignment.serializer())
+        private val subjectSerializer = WkObject.serializer(Subject.serializer())
+
         suspend fun newFromStorage(apiKey: String): WanikaniAccount {
             console.log("start read")
-            val rawData = idbkeyval.get("flashcards-wk-$apiKey-data").await()
+            val rawData = idbkeyval.get("flashcards-wk-$apiKey-data").await().asDynamic()
             console.log("end read")
             return if (rawData == null || rawData == undefined) {
                 newEmpty(apiKey)
             } else {
                 try {
-                    console.log("start decode")
-                    val data = Json.Default.decodeFromDynamic(Data.serializer(), rawData)
-                    console.log("end decode")
                     WanikaniAccount(
                         apiKey = apiKey,
-                        lastUpdated = data.lastUpdated,
-                        assignments = data.assignments.associateByTo(mutableMapOf()) { it.id },
-                        subjects = data.subjects.associateByTo(mutableMapOf()) { it.id },
-                        studyMaterials = data.studyMaterials.associateByTo(mutableMapOf()) { it.data.subject_id },
-                        user = data.user,
+                        lastUpdated = Instant.parse(rawData.lastUpdated as String),
+                        assignments = (rawData.assignments as Array<dynamic>).associateByTo(mutableMapOf(), { it.id }, { DynamicLazy.dynamic(it, assignmentSerializer) }),
+                        subjects = (rawData.subjects as Array<dynamic>).associateByTo(mutableMapOf(), { it.id }, { DynamicLazy.dynamic(it, subjectSerializer) }),
+                        studyMaterials = (rawData.studyMaterials as Array<dynamic>).associateByTo(mutableMapOf()) { it.data.subject_id },
+                        user = Json.Default.decodeFromDynamic(WkObject.serializer(User.serializer()), rawData.user),
                     )
                 } catch (e: SerializationException) {
                     console.error(e)
@@ -157,17 +169,8 @@ class WanikaniAccount private constructor(
         }
     }
 
-    @Serializable
-    private class Data(
-        val lastUpdated: Instant,
-        val user: WkObject<User>,
-        val assignments: List<WkObject<Assignment>>,
-        val subjects: List<WkObject<Subject>>,
-        val studyMaterials: List<WkObject<StudyMaterial>>,
-    )
-
     private val assignmentComparator = Comparator<WkObject<Assignment>> { a, b ->
-        SubjectComparator.compare(subjects[a.data.subjectId]!!, subjects[b.data.subjectId]!!)
+        SubjectComparator.compare(subject(a.data.subjectId)!!, subject(b.data.subjectId)!!)
     }
 
     object SubjectComparator : Comparator<WkObject<Subject>> {
@@ -191,4 +194,40 @@ class WanikaniAccount private constructor(
             return a.id.compareTo(b.id)
         }
     }
+}
+
+@Suppress("UnsafeCastFromDynamic")
+private fun subjectFromDynamic(value: dynamic): WkObject<Subject> {
+    val type = value.`object`
+    val data = when (type) {
+        "radical" -> {
+            RadicalSubject(
+                characters = value.data.characters,
+
+            )
+        }
+    }
+    return WkObject(
+        id = value.id,
+        `object` = type,
+    )
+}
+
+private val json = Json { ignoreUnknownKeys = true }
+@OptIn(ExperimentalSerializationApi::class)
+class DynamicLazy<T: Any> private constructor(
+    val dynamicValue: dynamic,
+    private val serializer: KSerializer<T>,
+    private var _value: T?,
+) {
+    companion object {
+        fun <T: Any> dynamic(dynamicValue: dynamic, serializer: KSerializer<T>): DynamicLazy<T> {
+            return DynamicLazy(dynamicValue, serializer, null)
+        }
+        fun <T: Any> value(value: T, serializer: KSerializer<T>): DynamicLazy<T> {
+            return DynamicLazy(json.encodeToDynamic(serializer, value), serializer, value)
+        }
+    }
+
+    val value: T get() = _value ?: json.decodeFromDynamic(serializer, dynamicValue).also { _value = it }
 }

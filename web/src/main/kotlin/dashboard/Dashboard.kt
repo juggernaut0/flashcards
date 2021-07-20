@@ -84,17 +84,17 @@ class Dashboard(private val model: DashboardModel) : Component() {
         }
     }
 
-    private fun MarkupBuilder.sourceTile(source: DashboardQuery.CardSource) {
+    private fun MarkupBuilder.sourceTile(source: DashboardSource) {
         button(Props(classes = listOf("dash-tile"), click = {
             FlashcardsApp.pushSourceEditor(source.id)
         })) {
             div(classes("dash-tile-content")) {
                 div(classes("dash-tile-title")) { +source.name }
                 div {
-                    when (source.__typename) {
-                        "CustomCardSource" -> +"Custom"
-                        "WanikaniCardSource" -> +"WaniKani"
+                    if (source.error) {
+                        span(classes("error-alert")) { +"⚠" }
                     }
+                    +source.type
                 }
             }
         }

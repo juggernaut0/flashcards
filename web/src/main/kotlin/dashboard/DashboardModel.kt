@@ -33,7 +33,21 @@ class DashboardModel(
                 }
                 DashboardDeck(deck.id, deck.name, lessons, reviews)
             },
-            sources = query.sources
+            sources = query.sources.map {
+                DashboardSource(
+                    id = it.id,
+                    name = it.name,
+                    type = when (it.__typename) {
+                        "CustomCardSource" -> "Custom"
+                        "WanikaniCardSource" -> "WaniKani"
+                        else -> "Unknown"
+                    },
+                    error = when (it.__typename) {
+                        "WanikaniCardSource" -> wanikaniService.forSource(it.id).error
+                        else -> false
+                    }
+                )
+            }
         )
     }
 
@@ -42,8 +56,9 @@ class DashboardModel(
     }
 }
 
-class DashboardData(val decks: List<DashboardDeck>, val sources: List<DashboardQuery.CardSource>)
+class DashboardData(val decks: List<DashboardDeck>, val sources: List<DashboardSource>)
 class DashboardDeck(val id: UUID, val name: String, val lessons: Int, val reviews: Int)
+class DashboardSource(val id: UUID, val name: String, val type: String, val error: Boolean)
 
 @Serializable
 class DashboardQuery(val decks: List<Deck>, val sources: List<CardSource>) {

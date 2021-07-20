@@ -15,11 +15,10 @@ import kotlin.time.ExperimentalTime
 
 class WanikaniService {
     // apiKey to account data
-    private val cachedData: MutableMap<String, WanikaniAccount> = mutableMapOf()
+    private val cachedData: MutableMap<String?, WanikaniAccount> = mutableMapOf()
 
     suspend fun forSource(sourceId: UUID): WanikaniAccount {
-        // TODO proper error reporting
-        val apiKey = getApiKey(sourceId) ?: throw IllegalStateException("API key is null")
+        val apiKey = getApiKey(sourceId)
         return cachedData.getOrPut(apiKey) { WanikaniAccount.newFromStorage(apiKey) }
     }
 
@@ -38,15 +37,17 @@ class WanikaniService {
 
 @OptIn(ExperimentalSerializationApi::class)
 class WanikaniAccount private constructor(
-    val apiKey: String,
+    private val apiKey: String?,
     var lastUpdated: Instant?,
     private val assignments: MutableMap<Long, WkObject<Assignment>>,
     private val subjects: MutableMap<Long, WkObject<Subject>>,
     private val studyMaterials: MutableMap<Long, WkObject<StudyMaterial>>, // subject_id to study material
     user: WkObject<User>?,
 ) {
-    private val wkCall = HttpWkCall(apiKey)
+    private val wkCall = apiKey?.let { HttpWkCall(it) }
     private lateinit var user: WkObject<User>
+    var error = apiKey == null
+        private set
 
     init {
         if (user != null) {
@@ -57,21 +58,28 @@ class WanikaniAccount private constructor(
     // TODO loading progress indication in UI
     @OptIn(ExperimentalTime::class)
     suspend fun update(force: Boolean = false) {
+        if (error || wkCall == null) return
         val lastUpdated = lastUpdated
         val now = Clock.System.now()
         if (!force && lastUpdated != null && now - lastUpdated < Duration.minutes(30)) return
         this.lastUpdated = now
-        user = wkCall.fetchUser()
-        if (lastUpdated == null) {
-            wkCall.fetchAssignments().forEach { assignments[it.id] = it }
-            wkCall.fetchSubjects().forEach { subjects[it.id] = it }
-            wkCall.fetchStudyMaterials().forEach { studyMaterials[it.data.subject_id] = it }
-        } else {
-            wkCall.fetchNewAssignments(lastUpdated).forEach { assignments[it.id] = it }
-            wkCall.fetchNewSubjects(lastUpdated).forEach { subjects[it.id] = it }
-            wkCall.fetchNewStudyMaterials(lastUpdated).forEach { studyMaterials[it.data.subject_id] = it }
+        try {
+            user = wkCall.fetchUser()
+            if (lastUpdated == null) {
+                wkCall.fetchAssignments().forEach { assignments[it.id] = it }
+                wkCall.fetchSubjects().forEach { subjects[it.id] = it }
+                wkCall.fetchStudyMaterials().forEach { studyMaterials[it.data.subject_id] = it }
+            } else {
+                wkCall.fetchNewAssignments(lastUpdated).forEach { assignments[it.id] = it }
+                wkCall.fetchNewSubjects(lastUpdated).forEach { subjects[it.id] = it }
+                wkCall.fetchNewStudyMaterials(lastUpdated).forEach { studyMaterials[it.data.subject_id] = it }
+            }
+            writeToStorage()
+        } catch (e: Exception) {
+            console.error(e)
+            this.lastUpdated = lastUpdated
+            error = true
         }
-        writeToStorage()
     }
 
     suspend fun getLessons(): List<WkObject<Assignment>> {
@@ -81,6 +89,7 @@ class WanikaniAccount private constructor(
 
     suspend fun getReviews(): List<WkObject<Assignment>> {
         update()
+        if (error) return emptyList()
         val now = Clock.System.now()
         val userLevel = user.data.level
         return assignments.values.filter {
@@ -101,11 +110,13 @@ class WanikaniAccount private constructor(
     }
 
     suspend fun startAssignment(assignmentId: Long) {
+        if (error || wkCall == null) return
         val updatedAssign = wkCall.startAssignment(assignmentId, Clock.System.now())
         assignments[updatedAssign.id] = updatedAssign
     }
 
     suspend fun createReview(assignmentId: Long, meaningIncorrect: Int, readingIncorrect: Int) {
+        if (error || wkCall == null) return
         val review = wkCall.createReview(assignmentId, meaningIncorrect, readingIncorrect, Clock.System.now())
         val assignment = review.resources_updated?.assignment!!
         assignments[assignment.id] = assignment
@@ -119,7 +130,7 @@ class WanikaniAccount private constructor(
     }
 
     companion object {
-        suspend fun newFromStorage(apiKey: String): WanikaniAccount {
+        suspend fun newFromStorage(apiKey: String?): WanikaniAccount {
             console.log("start read")
             val rawData = idbkeyval.get("flashcards-wk-$apiKey-data").await()
             console.log("end read")
@@ -145,7 +156,7 @@ class WanikaniAccount private constructor(
             }
         }
 
-        private fun newEmpty(apiKey: String): WanikaniAccount {
+        private fun newEmpty(apiKey: String?): WanikaniAccount {
             return WanikaniAccount(
                 apiKey = apiKey,
                 lastUpdated = null,

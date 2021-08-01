@@ -33,7 +33,7 @@ class SrsService @Inject constructor(
     }
 
     suspend fun isUpForReview(cardGroup: CardGroup, now: Instant = Instant.now()): Boolean {
-        val nextReview = availableAt(cardGroup)
+        val nextReview = availableAt(cardGroup) ?: return false
         return now >= nextReview
     }
 
@@ -52,10 +52,10 @@ class SrsService @Inject constructor(
         return cardGroup.srsStage == 0
     }
 
-    suspend fun availableAt(cardGroup: CardGroup): Instant {
+    suspend fun availableAt(cardGroup: CardGroup): Instant? {
         val stages = getDefaultStages()
-        if (cardGroup.srsStage == 0) return Instant.MAX
-        if (cardGroup.srsStage !in stages.indices) return Instant.MAX
+        if (cardGroup.srsStage == 0) return null
+        if (cardGroup.srsStage !in stages.indices) return null
         return (cardGroup.lastReviewed.toJavaInstant() + Duration.ofSeconds(stages[cardGroup.srsStage].toLong()))
             .truncatedTo(ChronoUnit.HOURS)
     }

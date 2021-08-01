@@ -78,7 +78,9 @@ class GraphQLHandler @Inject constructor(
                 field("reviewForecast", ListSerializer(ReviewForecastItem.serializer())) {
                     groups
                         .groupBy { srsService.availableAt(it) }
-                        .map { (time, cards) -> ReviewForecastItem(time.toKotlinInstant(), cards.size) }
+                        .mapNotNull { (time, cards) ->
+                            time?.let { ReviewForecastItem(it.toKotlinInstant(), cards.size) }
+                        }
                         .sortedBy { it.time }
                 }
             }

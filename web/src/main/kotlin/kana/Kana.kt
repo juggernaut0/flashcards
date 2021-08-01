@@ -54,8 +54,9 @@ fun kanaToRomaji(s: String): String {
                 continue
             }
 
-            if (i != s.lastIndex && s[i] in iSet && s[i+1] in lySet) {
-                append(reverseMapping["${s[i]}${s[i+1]}"])
+            if (i != s.lastIndex && s[i+1] in lSet) {
+                val combo = "${s[i]}${s[i+1]}"
+                append(reverseMapping[combo] ?: combo)
                 skip = true
             } else if (i != s.lastIndex && s[i] == 'っ' && s[i+1] !in aiueoSet && s[i+1].toString() in reverseMapping) {
                 append(reverseMapping[s[i+1].toString()]!!.substring(0, 1))
@@ -69,8 +70,7 @@ fun kanaToRomaji(s: String): String {
 }
 
 private val aiueoy = setOf('a', 'i', 'u', 'e', 'o', 'y')
-private val iSet = setOf('き', 'ぎ', 'し', 'じ', 'ち', 'に', 'ひ', 'び', 'ぴ', 'み', 'り')
-private val lySet = setOf('ゃ', 'ゅ', 'ょ')
+private val lSet = setOf('ゃ', 'ゅ', 'ょ', 'ぁ', 'ぃ', 'ぇ', 'ぉ')
 private val aiueoSet = setOf('あ', 'い', 'う', 'え', 'お')
 private val mapping = mapOf(
     "a" to "あ",
@@ -104,8 +104,8 @@ private val mapping = mapOf(
     "shu" to "しゅ",
     "sho" to "しょ",
     "za" to "ざ",
-    "ji" to "じ",
     "zi" to "じ",
+    "ji" to "じ",
     "zu" to "ず",
     "ze" to "ぜ",
     "zo" to "ぞ",
@@ -144,6 +144,10 @@ private val mapping = mapOf(
     "hya" to "ひゃ",
     "hyu" to "ひゅ",
     "hyo" to "ひょ",
+    "fa" to "ふぁ",
+    "fi" to "ふぃ",
+    "fe" to "ふぇ",
+    "fo" to "ふぉ",
     "ba" to "ば",
     "bi" to "び",
     "bu" to "ぶ",

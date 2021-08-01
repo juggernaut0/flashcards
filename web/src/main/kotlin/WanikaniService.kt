@@ -99,6 +99,19 @@ class WanikaniAccount private constructor(
         }
     }
 
+    suspend fun getReviewForecast(): Map<Instant, Int> {
+        update()
+        val userLevel = user.data.level
+        return assignments.values
+            .filter {
+                val level = subjects[it.data.subjectId]?.data?.level ?: 61
+                val availableAt = it.data.availableAt
+                userLevel >= level && availableAt != null
+            }
+            .groupingBy { it.data.availableAt!! }
+            .eachCount()
+    }
+
     suspend fun getSubject(id: Long): WkObject<Subject>? {
         update()
         return subjects[id]

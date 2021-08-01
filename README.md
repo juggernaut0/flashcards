@@ -15,7 +15,6 @@
 ## TODO
 
 * Features
-  * Deck overview screen: Review Forecast
   * Review summary improvements
     * Split into two columns, correct vs missed
     * show new SRS stage

@@ -12,6 +12,7 @@ import io.ktor.routing.*
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withContext
+import kotlinx.datetime.toKotlinInstant
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.nullable
 import kotlinx.serialization.builtins.serializer
@@ -74,6 +75,12 @@ class GraphQLHandler @Inject constructor(
                     val now = Instant.now()
                     groups.filter { srsService.isUpForReview(it, now) }.map { group -> ReviewItem(id, group) }
                 }
+                field("reviewForecast", ListSerializer(ReviewForecastItem.serializer())) {
+                    groups
+                        .groupBy { srsService.availableAt(it) }
+                        .map { (time, cards) -> ReviewForecastItem(time.toKotlinInstant(), cards.size) }
+                        .sortedBy { it.time }
+                }
             }
         }
         type(CardGroup.serializer())
@@ -81,6 +88,7 @@ class GraphQLHandler @Inject constructor(
         type(Deck.serializer()) {
             field("sources", ListSerializer(CardSource.serializer())) { sources().toList() }
         }
+        type(ReviewForecastItem.serializer())
         type(ReviewItem.serializer()) {
             field("source", CardSource.serializer()) {
                 val ctx = coroutineContext[QueryContext]!!

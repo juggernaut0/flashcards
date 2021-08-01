@@ -4,7 +4,6 @@ package flashcards.graphql
 
 import kotlinx.datetime.Instant
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.Transient
 import kotlinx.serialization.UseSerializers
 import multiplatform.UUID
 import multiplatform.UUIDSerializer
@@ -31,3 +30,6 @@ class ReviewItem(val sourceId: UUID, val cardGroup: CardGroup)
 
 @Serializable
 data class IdParam(@Serializable(with = UUIDSerializer::class) val id: UUID)
+
+@Serializable
+data class ReviewForecastItem(val time: Instant, val count: Int)

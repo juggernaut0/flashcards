@@ -14,6 +14,7 @@ class KanaTest {
         assertEquals("しゅつ", romajiToKana("shutsu"))
         assertEquals("あんき", romajiToKana("annki"))
         assertEquals("らーめん", romajiToKana("ra-menn"))
+        assertEquals("えっふぇる", romajiToKana("efferu"))
     }
 
     @Test
@@ -46,5 +47,7 @@ class KanaTest {
         assertEquals("shutsu", kanaToRomaji("しゅつ"))
         assertEquals("annki", kanaToRomaji("あんき"))
         assertEquals("ra-menn", kanaToRomaji("らーめん"))
+        assertEquals("jinn", kanaToRomaji("じん"))
+        assertEquals("efferu", kanaToRomaji("えっふぇる"))
     }
 }

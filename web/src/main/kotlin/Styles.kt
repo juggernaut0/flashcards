@@ -528,6 +528,28 @@ label {
 .em {
     font-style: italic;
 }
+
+.review-forecast-row {
+    flex-basis: 100%;
+}
+
+.review-forecast-time {
+    width: 200px;
+    display: inline-block;
+    text-align: right;
+}
+
+.review-forecast-count {
+    width: 60px;
+    display: inline-block;
+    text-align: right;
+}
+
+.review-forecast-total {
+    width: 50px;
+    display: inline-block;
+    text-align: right;
+}
 """
 
 private const val modalCss = """

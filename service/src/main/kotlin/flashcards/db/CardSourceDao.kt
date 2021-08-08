@@ -5,7 +5,11 @@ import flashcards.db.jooq.Tables.CUSTOM_CARD_SOURCE_CARDS
 import flashcards.db.jooq.tables.records.CardSourceRecord
 import flashcards.db.jooq.tables.records.CustomCardSourceCardsRecord
 import flashcards.graphql.CardGroup
-import kotlinx.coroutines.future.await
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.single
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.reactive.asFlow
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 import org.jooq.DSLContext
@@ -21,8 +25,8 @@ class CardSourceDao @Inject constructor() {
             .set(CARD_SOURCE.OWNER_ID, accountId)
             .set(CARD_SOURCE.NAME, name)
             .set(CARD_SOURCE.TYPE, type)
-            .executeAsync()
-            .await()
+            .asFlow()
+            .single()
 
         if (customCards != null) {
             val (version, contents) = CustomCardSerializer.toJson(customCards)
@@ -31,8 +35,8 @@ class CardSourceDao @Inject constructor() {
                 .set(CUSTOM_CARD_SOURCE_CARDS.SOURCE_ID, sourceId)
                 .set(CUSTOM_CARD_SOURCE_CARDS.VERSION, version)
                 .set(CUSTOM_CARD_SOURCE_CARDS.CONTENTS, JSONB.valueOf(contents))
-                .executeAsync()
-                .await()
+                .asFlow()
+                .single()
         }
 
         return sourceId
@@ -41,13 +45,13 @@ class CardSourceDao @Inject constructor() {
     suspend fun getSources(dsl: DSLContext, accountId: UUID): List<CardSourceData> {
         return dsl.selectFrom(CARD_SOURCE.leftJoin(CUSTOM_CARD_SOURCE_CARDS).onKey())
             .where(CARD_SOURCE.OWNER_ID.eq(accountId))
-            .fetchAsync()
-            .await()
+            .asFlow()
             .map {
                 val cardSourceRecord = it.into(CARD_SOURCE)
                 val customCards = it.into(CUSTOM_CARD_SOURCE_CARDS)
                 CardSourceData(cardSourceRecord, customCards)
             }
+            .toList()
             .sortedWith(compareBy(nullsLast(naturalOrder())) { it.cardSource.index })
     }
 
@@ -56,8 +60,7 @@ class CardSourceDao @Inject constructor() {
             .where(CARD_SOURCE.OWNER_ID.eq(accountId))
             .and(CARD_SOURCE.ID.eq(sourceId))
             .let { if (lock) it.forUpdate().of(CARD_SOURCE) else it }
-            .fetchAsync()
-            .await()
+            .asFlow()
             .firstOrNull()
             ?.let {
                 val cardSourceRecord = it.into(CARD_SOURCE)
@@ -78,8 +81,8 @@ class CardSourceDao @Inject constructor() {
                 .set(CARD_SOURCE.NAME, name)
                 .where(CARD_SOURCE.OWNER_ID.eq(accountId))
                 .and(CARD_SOURCE.ID.eq(sourceId))
-                .executeAsync()
-                .await()
+                .asFlow()
+                .single()
         }
 
         if (customCards != null) {
@@ -88,8 +91,8 @@ class CardSourceDao @Inject constructor() {
                 .set(CUSTOM_CARD_SOURCE_CARDS.VERSION, version)
                 .set(CUSTOM_CARD_SOURCE_CARDS.CONTENTS, JSONB.valueOf(contents))
                 .where(CUSTOM_CARD_SOURCE_CARDS.SOURCE_ID.eq(sourceId))
-                .executeAsync()
-                .await()
+                .asFlow()
+                .single()
         }
     }
 }

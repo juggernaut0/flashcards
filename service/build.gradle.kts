@@ -29,10 +29,10 @@ dependencies {
 
     implementation("ch.qos.logback:logback-classic:1.2.3")
 
-    implementation("org.postgresql:postgresql:42.2.5")
-    implementation("org.jooq:jooq:3.14.11")
     jooqGenerator("org.postgresql:postgresql:42.2.5")
-    implementation("com.zaxxer:HikariCP:3.2.0")
+    implementation("io.r2dbc:r2dbc-postgresql:0.8.8.RELEASE")
+    implementation("io.r2dbc:r2dbc-pool:0.8.7.RELEASE")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.5.1")
 
     implementation("io.github.config4k:config4k:0.4.2")
 
@@ -56,6 +56,7 @@ application {
 jooq {
     configurations {
         create("main") {
+            version.set("3.15.1")
             generateSchemaSourceOnCompilation.set(true)
             jooqConfiguration.apply {
                 jdbc.apply {

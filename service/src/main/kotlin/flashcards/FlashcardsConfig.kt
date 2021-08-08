@@ -14,5 +14,5 @@ class DataConfig(
         val user: String,
         val password: String,
         val jdbcUrl: String,
-        val dataSourceClassName: String,
+        val r2dbcUrl: String,
 )

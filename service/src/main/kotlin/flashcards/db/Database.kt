@@ -1,39 +1,37 @@
 package flashcards.db
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.asExecutor
-import kotlinx.coroutines.future.await
-import kotlinx.coroutines.runBlocking
+import io.r2dbc.spi.ConnectionFactory
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.reactive.asFlow
+import kotlinx.coroutines.reactive.awaitSingle
 import org.jooq.DSLContext
-import org.jooq.ExecutorProvider
 import org.jooq.SQLDialect
-import org.jooq.exception.DataAccessException
 import org.jooq.impl.DSL
-import org.slf4j.LoggerFactory
+import org.reactivestreams.Publisher
 import javax.inject.Inject
 import javax.inject.Singleton
-import javax.sql.DataSource
 
 @Singleton
-class Database @Inject constructor(private val dataSource: DataSource) {
+class Database @Inject constructor(private val connectionFactory: ConnectionFactory) {
     suspend fun <T> transaction(block: suspend CoroutineScope.(DSLContext) -> T): T {
-        return try {
-            dataSource.connection.use { conn ->
-                val dsl = DSL.using(conn, SQLDialect.POSTGRES).also {
-                    it.configuration().set(ExecutorProvider { Dispatchers.IO.asExecutor() })
-                }
-                dsl.transactionResultAsync { config ->
-                    runBlocking { block(DSL.using(config)) }
-                }.await()
-            }
-        } catch (dae: DataAccessException) {
-            log.warn("Caught: $dae")
-            throw (dae.cause ?: dae)
+        val conn = connectionFactory.create().awaitSingle()
+        conn.setAutoCommit(false).await()
+        conn.beginTransaction().await()
+        val res = try {
+            val dsl = DSL.using(conn, SQLDialect.POSTGRES)
+            coroutineScope { block(dsl) }
+        } catch (e: Exception) {
+            conn.rollbackTransaction().await()
+            conn.close().await()
+            throw e
         }
+        conn.commitTransaction().await()
+        conn.close().await()
+        return res
     }
+}
 
-    companion object {
-        private val log = LoggerFactory.getLogger(Database::class.java)
-    }
+private suspend fun Publisher<Void>.await() {
+    asFlow().collect {  }
 }

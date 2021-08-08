@@ -2,7 +2,8 @@ package flashcards.db
 
 import flashcards.db.jooq.Tables.*
 import flashcards.db.jooq.tables.records.DeckRecord
-import kotlinx.coroutines.future.await
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.reactive.asFlow
 import multiplatform.ktor.BadRequestException
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -16,8 +17,8 @@ class DeckDao @Inject constructor() {
             .set(DECK.ID, id)
             .set(DECK.OWNER_ID, accountId)
             .set(DECK.NAME, name)
-            .executeAsync()
-            .await()
+            .asFlow()
+            .single()
 
         if (sources.isNotEmpty()) {
             setSources(dsl, id, sources)
@@ -30,8 +31,8 @@ class DeckDao @Inject constructor() {
         return dsl.select(DECK.asterisk(), DECK_CARD_SOURCE.SOURCE_ID, DECK_CARD_SOURCE.INDEX)
             .from(DECK.leftJoin(DECK_CARD_SOURCE).onKey())
             .where(DECK.OWNER_ID.eq(accountId))
-            .fetchAsync()
-            .await()
+            .asFlow()
+            .toList()
             .groupBy { it[DECK.ID] }
             .map { (_, records) -> toDeckData(records) }
             .sortedWith(compareBy(nullsLast(naturalOrder())) { it.deckRecord.index })
@@ -42,9 +43,9 @@ class DeckDao @Inject constructor() {
             .from(DECK.leftJoin(DECK_CARD_SOURCE).onKey())
             .where(DECK.OWNER_ID.eq(accountId))
             .and(DECK.ID.eq(deckId))
-            .fetchAsync()
-            .await()
-            .takeIf { it.isNotEmpty }
+            .asFlow()
+            .toList()
+            .takeIf { it.isNotEmpty() }
             ?.let { toDeckData(it) }
     }
 
@@ -65,8 +66,7 @@ class DeckDao @Inject constructor() {
         dsl.selectFrom(DECK)
             .where(DECK.OWNER_ID.eq(accountId))
             .and(DECK.ID.eq(deckId))
-            .fetchAsync()
-            .await()
+            .asFlow()
             .firstOrNull()
             ?: throw BadRequestException("Deck with id [$deckId] not found")
 
@@ -75,17 +75,17 @@ class DeckDao @Inject constructor() {
                 .set(DECK.NAME, name)
                 .where(DECK.OWNER_ID.eq(accountId))
                 .and(DECK.ID.eq(deckId))
-                .executeAsync()
-                .await()
+                .asFlow()
+                .single()
         }
 
         if (sources != null) {
             // check that all sources listed belong to me
             val allSources = dsl.select(CARD_SOURCE.ID).from(CARD_SOURCE)
                 .where(CARD_SOURCE.OWNER_ID.eq(accountId))
-                .fetchAsync()
-                .await()
-                .mapTo(mutableSetOf()) { it.value1() }
+                .asFlow()
+                .map { it.value1() }
+                .toSet()
 
             if (sources.any { it !in allSources }) {
                 throw BadRequestException("Unknown source id in $sources")
@@ -100,14 +100,14 @@ class DeckDao @Inject constructor() {
     private suspend fun setSources(dsl: DSLContext, deckId: UUID, sources: List<UUID>) {
         dsl.deleteFrom(DECK_CARD_SOURCE)
             .where(DECK_CARD_SOURCE.DECK_ID.eq(deckId))
-            .executeAsync()
-            .await()
+            .asFlow()
+            .single()
 
         dsl.insertInto(DECK_CARD_SOURCE)
             .columns(DECK_CARD_SOURCE.DECK_ID, DECK_CARD_SOURCE.SOURCE_ID, DECK_CARD_SOURCE.INDEX)
             .let { sources.foldIndexed(it) { i, sql, sourceId -> sql.values(deckId, sourceId, i) } }
-            .executeAsync()
-            .await()
+            .asFlow()
+            .single()
     }
 }
 

@@ -16,19 +16,21 @@ import javax.inject.Singleton
 class Database @Inject constructor(private val connectionFactory: ConnectionFactory) {
     suspend fun <T> transaction(block: suspend CoroutineScope.(DSLContext) -> T): T {
         val conn = connectionFactory.create().awaitSingle()
-        conn.setAutoCommit(false).await()
-        conn.beginTransaction().await()
-        val res = try {
-            val dsl = DSL.using(conn, SQLDialect.POSTGRES)
-            coroutineScope { block(dsl) }
-        } catch (e: Exception) {
-            conn.rollbackTransaction().await()
+        try {
+            conn.setAutoCommit(false).await()
+            conn.beginTransaction().await()
+            try {
+                val dsl = DSL.using(conn, SQLDialect.POSTGRES)
+                val res = coroutineScope { block(dsl) }
+                conn.commitTransaction().await()
+                return res
+            } catch (e: Exception) {
+                conn.rollbackTransaction().await()
+                throw e
+            }
+        } finally {
             conn.close().await()
-            throw e
         }
-        conn.commitTransaction().await()
-        conn.close().await()
-        return res
     }
 }
 

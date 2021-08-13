@@ -6,7 +6,7 @@ import components.Header
 import components.Modal
 import components.cardDetails
 import kui.*
-import review.ReviewSummaryData
+import review.ReviewSummaryItem
 import review.Reviewer
 
 class LessonScreen(private val model: LessonModel) : Component() {
@@ -14,7 +14,7 @@ class LessonScreen(private val model: LessonModel) : Component() {
     private var remainingItems = 0
     private var currentItem = 0
     private var learnMode = true
-    private val summaryData: ReviewSummaryData = mutableListOf()
+    private val summaryData: MutableList<ReviewSummaryItem> = mutableListOf()
 
     init {
         async {

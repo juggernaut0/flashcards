@@ -14,6 +14,7 @@ import lesson.LessonScreen
 import multiplatform.UUID
 import review.ReviewModel
 import review.ReviewScreen
+import review.ReviewSummary
 import review.ReviewSummaryData
 
 object FlashcardsApp : Component() {
@@ -48,7 +49,7 @@ object FlashcardsApp : Component() {
     }
 
     fun pushReviewSummary(summaryData: ReviewSummaryData) {
-        pushState(ReviewSummary(flashcardsService, summaryData))
+        pushState(ReviewSummary(summaryData))
     }
 
     fun pushSourceCreation() {

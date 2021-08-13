@@ -550,6 +550,10 @@ label {
     display: inline-block;
     text-align: right;
 }
+
+.review-summary-column {
+    flex-basis: 50%;
+}
 """
 
 private const val modalCss = """

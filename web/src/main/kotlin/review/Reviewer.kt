@@ -19,7 +19,7 @@ import multiplatform.UUIDSerializer
 import org.w3c.dom.Audio
 import org.w3c.dom.HTMLInputElement
 
-typealias ReviewSummaryData = MutableList<List<Pair<String, Boolean>>>
+typealias ReviewSummaryData = List<ReviewSummaryItem>
 
 class Reviewer(
     items: List<ReviewItem>,
@@ -38,7 +38,7 @@ class Reviewer(
     private var inputState = InputState.WAITING
     private var notesShown = false
     private var reviewMistakeText = ""
-    private val summary = mutableListOf<List<Pair<String, Boolean>>>()
+    private val summary = mutableListOf<ReviewSummaryItem>()
 
     enum class InputState { WAITING, CORRECT, INCORRECT }
 
@@ -61,7 +61,11 @@ class Reviewer(
                     workingGroups.remove(item)
                     async {
                         try {
-                            summary.add(item.cards.map { it.card.toDisplayString() to (it.timesIncorrect == 0) })
+                            val summaryItem = ReviewSummaryItem(
+                                group = item.reviewItem.cardGroup,
+                                correct = item.cards.map { it.timesIncorrect == 0 }
+                            )
+                            summary.add(summaryItem)
                             onSubmit(ReviewResult(item))
                         } catch (e: FetchException) {
                             console.error(e)

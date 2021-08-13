@@ -15,9 +15,8 @@
 ## TODO
 
 * Features
-  * Review summary improvements
-    * Split into two columns, correct vs missed
-    * show new SRS stage
+  * QoL: Make custom card editor easier to create a large amount of cards
+    * Maybe JSON/CSV import?
   * Allow reordering of sources & decks in account
   * Custom card source: Allow reordering groups
   * Allow disabling lessons for certain sources per deck
@@ -25,10 +24,10 @@
     * Block-list: Hidden list of inputs that are rejected, even if close to an answer
     * close-list: Hidden list of inputs that are close but not correct, e.g., reading for a meaning card
   * Improve WK data load performance
-  * QoL: Make custom card editor easier to create a large amount of cards
-    * Maybe JSON/CSV import?
   * Review screen: Wrap up
   * View SRS stages on custom card editor
+  * Review summary improvements
+    * show new SRS stage
   * QoL: Add synonyms from review screen details foldout
   * Implement source and deck deletion
   * Change screen transitions to not blink (no loading text until 500ms have passed)

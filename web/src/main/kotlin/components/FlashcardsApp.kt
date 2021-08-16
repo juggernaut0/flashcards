@@ -16,6 +16,7 @@ import review.ReviewModel
 import review.ReviewScreen
 import review.ReviewSummary
 import review.ReviewSummaryData
+import source.editor.SourceEditor
 
 object FlashcardsApp : Component() {
     private val emptyComponent = componentOf { it.div {  } }

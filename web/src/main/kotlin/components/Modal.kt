@@ -19,7 +19,7 @@ object Modal : Component() {
         kui.mountComponent(document.body!!, Modal)
     }
 
-    fun show(title: String, body: Component, okText: String? = null, danger: Boolean = false, ok: (Boolean) -> Unit) {
+    fun show(title: String, body: Component, okText: String? = null, danger: Boolean = false, ok: ((Boolean) -> Unit)? = null) {
         if (showing) return
         this.title = title
         this.body = body
@@ -42,27 +42,31 @@ object Modal : Component() {
         }
     }
 
-    private fun close() {
-        showing = false
-        ok = null
-        render()
+    private fun close(result: Boolean) {
+        try {
+            ok?.invoke(result)
+        } finally {
+            showing = false
+            ok = null
+            render()
+        }
     }
 
     override fun render() {
         val cls = if (showing) listOf("modal-background", "modal-show") else listOf("modal-background")
-        markup().div(Props(classes = cls, mousedown = { ok?.invoke(false); close() })) {
-            div(classes("modal-box").copy(mousedown = {})) {
+        markup().div(Props(classes = cls, mousedown = { close(false) })) {
+            div(classes("modal-box").copy(mousedown = { /* stop bubbling */ })) {
                 h3 { +title }
                 body?.also { component(it) }
                 div(classes("modal-btns")) {
                     button(Props(
                         classes = listOf("modal-btn", if (danger) "modal-btn-danger" else "modal-btn-ok"),
-                        click = { ok?.invoke(true); close() })) {
+                        click = { close(true) })) {
                         +(okText ?: "Ok")
                     }
                     button(Props(
                         classes = listOf("modal-btn", "modal-btn-cancel"),
-                        click = { ok?.invoke(false); close() })) {
+                        click = { close(false) })) {
                         +"Cancel"
                     }
                 }

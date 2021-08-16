@@ -1,11 +1,12 @@
 @file:UseSerializers(UUIDSerializer::class)
 
-package components
+package source.editor
 
 import FlashcardsService
 import WanikaniService
 import asynclite.async
 import asynclite.delay
+import components.Header
 import flashcards.api.v1.CardSourceRequest
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

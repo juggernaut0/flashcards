@@ -31,7 +31,7 @@ class ReviewSummary(data: List<ReviewSummaryItem>) : Component() {
             for (item in items) {
                 for ((card, correct) in item.group.cards.zip(item.correct)) {
                     val clazz = if (correct) "review-summary-correct" else "review-summary-incorrect"
-                    div(classes(clazz)) { +card.front }
+                    div(classes(clazz)) { +card.toDisplayString() }
                 }
                 hr()
             }

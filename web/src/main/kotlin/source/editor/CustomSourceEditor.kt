@@ -1,13 +1,17 @@
-package components
+package source.editor
 
+import asynclite.async
+import components.Modal
+import components.TagInput
 import flashcards.api.v1.CardSourceRequest
-import kui.Component
-import kui.Props
-import kui.classes
-import kui.renderOnSet
-import components.SourceEditor.CardSource
+import source.editor.SourceEditor.CardSource
 import flashcards.api.v1.Card
+import flashcards.api.v1.CardGroup
 import flashcards.api.v1.CustomCardSourceRequest
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.json.Json
+import kui.*
 
 class CustomSourceEditor(source: CardSource.CustomCardSource, private val makeDirty: () -> Unit) : SourceEditor.Contents() {
     private var showBacks by renderOnSet(false)
@@ -21,15 +25,47 @@ class CustomSourceEditor(source: CardSource.CustomCardSource, private val makeDi
     }
     private var iidSeq = source.groups.maxOfOrNull { it.iid }?.let { it + 1 } ?: 0
 
+    private fun nextIid(): Int {
+        val iid = iidSeq
+        iidSeq += 1
+        return iid
+    }
+
     override fun toRequest(): CardSourceRequest {
         return CustomCardSourceRequest(groups = groups.map { it.toGroup() })
     }
 
     private fun addGroup() {
-        groups.add(CardGroupView(iid = iidSeq))
-        iidSeq += 1
+        groups.add(CardGroupView(iid = nextIid()))
         makeDirty()
         render()
+    }
+
+    private fun import() {
+        async {
+            val contents = object : Component() {
+                var text = ""
+
+                override fun render() {
+                    markup().textarea(classes("form-input"), model = ::text)
+                }
+            }
+            val ok = Modal.suspendShow("Import Cards", contents)
+            if (ok) {
+                val impGroups = prettyPrintJson.decodeFromString(ListSerializer(ExportCardGroup.serializer()), contents.text)
+                for (group in impGroups) {
+                    groups.add(CardGroupView(group.cards.toMutableList(), nextIid()))
+                }
+                makeDirty()
+                render()
+            }
+        }
+    }
+
+    private fun export() {
+        val expGroups = groups.map { ExportCardGroup(it.toGroup().cards) }
+        val contents = prettyPrintJson.encodeToString(ListSerializer(ExportCardGroup.serializer()), expGroups)
+        Modal.show("Export Cards", componentOf { it.pre { +contents } })
     }
 
     override fun render() {
@@ -39,6 +75,10 @@ class CustomSourceEditor(source: CardSource.CustomCardSource, private val makeDi
                 checkbox(model = ::showBacks)
                 +"Show backs"
             }
+            div(classes("gapped-row")) {
+                button(Props(classes = listOf("button-confirm"), click = ::import)) { +"Import" }
+                button(Props(classes = listOf("button-confirm"), click = ::export)) { +"Export" }
+            }
             for (group in groups) {
                 component(group)
             }
@@ -47,8 +87,8 @@ class CustomSourceEditor(source: CardSource.CustomCardSource, private val makeDi
     }
 
     private inner class CardGroupView(private val cards: MutableList<Card> = mutableListOf(), private val iid: Int) : Component() {
-        fun toGroup(): flashcards.api.v1.CardGroup {
-            return flashcards.api.v1.CardGroup(cards = cards, iid = iid)
+        fun toGroup(): CardGroup {
+            return CardGroup(cards = cards, iid = iid)
         }
 
         private fun addCard() {
@@ -145,8 +185,12 @@ class CustomSourceEditor(source: CardSource.CustomCardSource, private val makeDi
         }
     }
 
+    @Serializable
+    private class ExportCardGroup(val cards: List<Card>)
+
     companion object {
         private const val X = "\u00d7"
         private const val EDIT = "\u270E"
+        private val prettyPrintJson = Json { prettyPrint = true; ignoreUnknownKeys = true }
     }
 }

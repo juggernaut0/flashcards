@@ -565,9 +565,9 @@ private const val modalCss = """
     width: 100%;
     height: 100%;
     display: none;
-    justify-content: center;
-    align-items: center;
     z-index: 1000;
+    overflow-x: hidden;
+    overflow-y: auto;
 }
 .modal-box {
     background-color: white;
@@ -577,9 +577,10 @@ private const val modalCss = """
     border: 1px solid $borderGray;
     border-radius: 0.25rem;
     width: 80%;
+    margin: 1.75rem auto;
 }
 .modal-show {
-    display: flex;
+    display: block;
 }
 .modal-btns {
     display: flex;

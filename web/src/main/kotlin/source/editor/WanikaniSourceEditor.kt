@@ -1,8 +1,8 @@
-package components
+package source.editor
 
 import WanikaniService
 import asynclite.async
-import components.SourceEditor.CardSource.WanikaniCardSource
+import source.editor.SourceEditor.CardSource.WanikaniCardSource
 import flashcards.api.v1.CardSourceRequest
 import flashcards.api.v1.WanikaniCardSourceRequest
 import kui.Props

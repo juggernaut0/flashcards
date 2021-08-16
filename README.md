@@ -15,8 +15,6 @@
 ## TODO
 
 * Features
-  * QoL: Make custom card editor easier to create a large amount of cards
-    * Maybe JSON/CSV import?
   * Allow reordering of sources & decks in account
   * Custom card source: Allow reordering groups
   * Allow disabling lessons for certain sources per deck

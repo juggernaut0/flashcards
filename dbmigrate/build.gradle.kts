@@ -11,7 +11,7 @@ dependencies {
     implementation(kotlin("stdlib-jdk8"))
 
     implementation("org.postgresql:postgresql:42.2.23")
-    implementation("org.flywaydb:flyway-core:6.5.7")
+    implementation("org.flywaydb:flyway-core:7.14.0")
 }
 
 application {

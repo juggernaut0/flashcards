@@ -4,7 +4,7 @@ import com.bmuschko.gradle.docker.tasks.image.Dockerfile
 plugins {
     kotlin("jvm")
     application
-    id("com.bmuschko.docker-remote-api") version "6.7.0"
+    id("com.bmuschko.docker-remote-api") version "7.1.0"
 }
 
 dependencies {

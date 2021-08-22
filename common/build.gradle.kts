@@ -18,7 +18,7 @@ kotlin {
             }
         }
 
-        val multiplatformUtilsVersion = "0.6.3-graphql-SNAPSHOT"
+        val multiplatformUtilsVersion = "0.6.3"
 
         val commonMain by getting {
             dependencies {

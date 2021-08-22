@@ -1,0 +1,93 @@
+@use "variables" as *;
+
+.sticky-top {
+    position: -webkit-sticky;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.solid-row {
+    background-color: #f7f7f7;
+    flex-basis: 100%;
+}
+
+.gapped-row {
+    display: flex;
+    gap: 0.25rem;
+    align-items: center;
+}
+
+.card-group {
+    border: 1px solid $borderGray;
+    border-radius: 0.25rem;
+    overflow: clip;
+    margin-bottom: 0.5rem;
+}
+
+.card-group-card {
+    display: flex;
+    padding: 0.25rem;
+    line-height: 1.5rem;
+    border-bottom: 1px solid $borderGray;
+}
+
+.card-info {
+    display: flex;
+    flex-grow: 1;
+
+    span {
+        flex-grow: 1;
+        width: 0;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
+    }
+}
+
+.card-button {
+    border: 0;
+    background-color: transparent;
+    color: $borderGray;
+    font-weight: bold;
+    font-size: 20;
+
+    &-del:hover {
+        color: $btnDangerHoverColor;
+    }
+
+    &-edit:hover {
+        color: $btnEditHoverColor;
+    }
+}
+
+.button-add-card {
+    background-color: $btnLightColor;
+    border: 0;
+    line-height: 1.5rem;
+    text-align: center;
+    width: 100%;
+    padding: 0.25rem;
+
+    &:hover {
+        background-color: $btnLightHoverColor;
+    }
+}
+
+.button-add-group {
+    background-color: $btnLightColor;
+    border: 1px solid $borderGray;
+    line-height: 1.5rem;
+    text-align: center;
+    width: 100%;
+    padding: 0.25rem;
+    border-radius: 0.25rem;
+
+    &:hover {
+        background-color: $btnLightHoverColor;
+    }
+}
+
+.blur {
+    filter: blur(4px);
+}

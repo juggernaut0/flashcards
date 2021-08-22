@@ -1,0 +1,22 @@
+@use "variables" as *;
+
+.source-type {
+    border: 1px solid $borderGray;
+    background-color: $btnLightColor;
+    line-height: 2rem;
+    margin-right: -1px;
+
+    &-active, &:hover {
+        background-color: $btnLightHoverColor;
+    }
+
+    &:first-child {
+        border-top-left-radius: 0.25rem;
+        border-bottom-left-radius: 0.25rem;
+    }
+
+    &:last-child {
+        border-top-right-radius: 0.25rem;
+        border-bottom-right-radius: 0.25rem;
+    }
+}

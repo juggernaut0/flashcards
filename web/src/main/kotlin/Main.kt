@@ -3,7 +3,6 @@ import components.FlashcardsApp
 import kotlinx.browser.document
 
 fun main() {
-    applyStyles()
     if (auth.isSignedIn()) {
         kui.mountComponent(document.body!!, FlashcardsApp)
         FlashcardsApp.pushDashboard()

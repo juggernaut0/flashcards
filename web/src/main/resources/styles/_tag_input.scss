@@ -1,0 +1,53 @@
+@use "variables" as *;
+
+.taginput {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    box-sizing: border-box;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid $borderGray;
+    border-radius: 0.25rem;
+    margin-top: 0.4rem;
+    background-color: #fff;
+    cursor: text;
+}
+
+.taginput-tag {
+    padding-left: 0.25rem;
+    background-color: $btnColor;
+    color: #fff;
+    border-radius: 0.25rem;
+    margin: 0.25rem 0;
+    margin-right: 0.5rem;
+    cursor: default;
+    font-size: 15px;
+}
+
+.taginput-tag-close {
+    display: inline;
+    border: 0;
+    background-color: inherit;
+    color: inherit;
+    font-size: inherit;
+    padding: 0.25rem;
+    border-radius: 0 0.25rem 0.25rem 0;
+    margin-left: 0.25rem;
+
+    &:hover {
+        background-color: $btnHoverColor;
+    }
+}
+
+input.taginput-input {
+    border: 0;
+    line-height: 2;
+    font-size: 1rem;
+    flex-grow: 1;
+    width: unset;
+    order: 1;
+}
+
+.taginput-input:focus {
+    outline: none;
+}

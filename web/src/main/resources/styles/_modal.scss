@@ -1,0 +1,71 @@
+@use "variables" as *;
+
+.modal-background {
+    background-color: rgba(51, 51, 51, 0.5);
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+    z-index: 1000;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+.modal-box {
+    background-color: white;
+    font-family: "Segoe UI",Roboto,sans-serif;
+    color: #222;
+    padding: 1rem;
+    border: 1px solid $borderGray;
+    border-radius: 0.25rem;
+    width: 80%;
+    margin: 1.75rem auto;
+}
+.modal-show {
+    display: block;
+}
+.modal-btns {
+    display: flex;
+    margin: 0 -0.25rem;
+}
+.modal-btn {
+    flex-basis: 50%;
+    flex-grow: 1;
+    height: 3rem;
+    color: #fff;
+    border: 0;
+    border-radius: 0.25rem;
+    margin: 0.25rem;
+    font-size: 1rem;
+
+    &-ok {
+        background-color: $btnColor;
+
+        &:hover {
+            background-color: $btnHoverColor;
+        }
+    }
+
+    &-danger {
+        background-color: $btnDangerColor;
+
+        &:hover {
+            background-color: $btnDangerHoverColor;
+        }
+    }
+
+    &-cancel {
+        background-color: $btnSecondaryColor;
+
+        &:hover {
+            background-color: $btnSecondaryHoverColor;
+        }
+    }
+}
+
+@media only screen and (min-width: 600px) {
+    .modal-box {
+        width: 500px;
+    }
+}

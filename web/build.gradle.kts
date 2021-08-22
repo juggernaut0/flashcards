@@ -39,3 +39,13 @@ kotlin {
         binaries.executable()
     }
 }
+
+tasks {
+    val runSass by registering(SassTask::class) {
+        inputDir.set(file("src/main/resources/styles"))
+    }
+
+    assemble {
+        dependsOn(runSass)
+    }
+}

@@ -1,0 +1,107 @@
+@use "variables" as *;
+
+.source-list-button {
+    border: 0;
+    background-color: transparent;
+    color: $borderGray;
+    font-weight: bold;
+    font-size: 20;
+    width: 19px;
+
+    &-del:hover {
+        color: $btnDangerHoverColor;
+    }
+
+    &-move:hover {
+        color: $btnEditHoverColor;
+    }
+
+    &-blank {
+        display: inline-block;
+    }
+}
+
+.deck-add-source-select {
+    background: white;
+    border: 1px solid $borderGray;
+    border-top-left-radius: 0.25rem;
+    border-bottom-left-radius: 0.25rem;
+    padding: 0.25rem;
+    min-width: 10rem;
+}
+
+.deck-add-source-button {
+    background-color: $btnLightColor;
+    border: 1px solid $borderGray;
+    border-top-right-radius: 0.25rem;
+    border-bottom-right-radius: 0.25rem;
+    text-align: center;
+    padding: 0.25rem;
+
+    &:hover {
+        background-color: $btnLightHoverColor;
+    }
+}
+
+.start-lesson-button {
+    line-height: 5rem;
+    width: 12rem;
+    color: $lessonColor;
+    background-color: white;
+    border: 1px solid $lessonColor;
+
+    &:hover:enabled {
+        color: white;
+        background-color: $lessonColor;
+    }
+
+    &:disabled {
+        color: $borderGray;
+        border-color: $borderGray;
+    }
+}
+
+.start-review-button {
+    line-height: 5rem;
+    width: 12rem;
+    color: $reviewColor;
+    background-color: white;
+    border: 1px solid $reviewColor;
+    margin-left: 0.5rem;
+
+    &:hover:enabled {
+        color: white;
+        background-color: $reviewColor;
+    }
+
+    &:disabled {
+        color: $borderGray;
+        border-color: $borderGray;
+    }
+}
+
+.review-forecast-row {
+    flex-basis: 100%;
+}
+
+.review-forecast-time {
+    width: 200px;
+    display: inline-block;
+    text-align: right;
+}
+
+.review-forecast-count {
+    width: 60px;
+    display: inline-block;
+    text-align: right;
+}
+
+.review-forecast-total {
+    width: 50px;
+    display: inline-block;
+    text-align: right;
+}
+
+.review-summary-column {
+    flex-basis: 50%;
+}

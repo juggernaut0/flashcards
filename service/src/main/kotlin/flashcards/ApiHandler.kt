@@ -18,10 +18,12 @@ import flashcards.graphql.CardGroup as GraphqlCardGroup
 fun Route.registerRoutes(handler: ApiHandler) {
     authenticate {
         handleApi(createSource) { handler.createSource(auth as ValidatedToken, it) }
+        handleApi(reorderSources) { handler.reorderSources(auth as ValidatedToken, it) }
         handleApi(updateSource) { handler.updateSource(auth as ValidatedToken, params.id, it) }
         handleApi(submitReview) { handler.submitReview(auth as ValidatedToken, params.sourceId, params.iid, it) }
 
         handleApi(createDeck) { handler.createDeck(auth as ValidatedToken, it) }
+        handleApi(reorderDecks) { handler.reorderDecks(auth as ValidatedToken, it) }
         handleApi(updateDeck) { handler.updateDeck(auth as ValidatedToken, params.id, it) }
     }
 }
@@ -47,6 +49,17 @@ class ApiHandler @Inject constructor(
         }
         return database.transaction { dsl ->
             sourceDao.createSource(dsl, accountId, name, type, cards)
+        }
+    }
+
+    suspend fun reorderSources(token: ValidatedToken, newOrder: List<UUID>) {
+        val accountId = accountService.ensureAccount(token)
+        database.transaction { dsl ->
+            val allSources = sourceDao.getSources(dsl, accountId).map { it.cardSource.id }
+            if (!newOrder.sameContents(allSources)) {
+                throw BadRequestException("Reordering list must contain every source ID exactly once")
+            }
+            sourceDao.reorderSources(dsl, accountId, newOrder)
         }
     }
 
@@ -125,6 +138,17 @@ class ApiHandler @Inject constructor(
         }
     }
 
+    suspend fun reorderDecks(token: ValidatedToken, newOrder: List<UUID>) {
+        val accountId = accountService.ensureAccount(token)
+        database.transaction { dsl ->
+            val allDecks = deckDao.getDecks(dsl, accountId).map { it.deckRecord.id }
+            if (!newOrder.sameContents(allDecks)) {
+                throw BadRequestException("Reordering list must contain every deck ID exactly once")
+            }
+            deckDao.reorderDecks(dsl, accountId, newOrder)
+        }
+    }
+
     suspend fun updateDeck(token: ValidatedToken, deckId: UUID, request: DeckRequest) {
         val accountId = accountService.ensureAccount(token)
         database.transaction { dsl ->
@@ -132,3 +156,5 @@ class ApiHandler @Inject constructor(
         }
     }
 }
+
+private fun <T> List<T>.sameContents(b: List<T>): Boolean = all { it in b } && b.all { it in this }

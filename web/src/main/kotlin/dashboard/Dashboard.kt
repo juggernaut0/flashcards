@@ -49,54 +49,38 @@ class Dashboard(private val model: DashboardModel) : Component() {
             if (sources.isEmpty()) {
                 span { +"You must add a source before creating a deck." }
             } else {
-                div(classes("buttons")) {
-                    for (deck in decks) {
-                        deckTile(deck)
+                component(DndReorderTileList(
+                    decks,
+                    contentType = "application/x-deck",
+                    click = { FlashcardsApp.pushDeckOverview(it.id) },
+                    add = { createDeck() },
+                    reorder = { async { model.updateDeckOrder(it) } },
+                    tileContent = { deck ->
+                        div(classes("dash-tile-title")) { +deck.name }
+                        div(classes("dash-tile-deck-indicators")) {
+                            span(classes("indicator", "indicator-lessons")) { +"${deck.lessons}" }
+                            span(classes("indicator", "indicator-reviews")) { +"${deck.reviews}" }
+                        }
                     }
-                    button(Props(
-                        classes = listOf("dash-tile", "dash-tile-add"),
-                        click = ::createDeck
-                    )) { +"+" }
-                }
+                ))
             }
             h2 { +"Card sources" }
-            div(classes("buttons")) {
-                for (source in sources) {
-                    sourceTile(source)
-                }
-                button(Props(
-                    classes = listOf("dash-tile", "dash-tile-add"),
-                    click = { FlashcardsApp.pushSourceCreation() }
-                )) { +"+" }
-            }
-        }
-    }
-
-    private fun MarkupBuilder.deckTile(deck: DashboardDeck) {
-        button(Props(classes = listOf("dash-tile"), click = { FlashcardsApp.pushDeckOverview(deck.id) })) {
-            div(classes("dash-tile-content")) {
-                div(classes("dash-tile-title")) { +deck.name }
-                div(classes("dash-tile-deck-indicators")) {
-                    span(classes("indicator", "indicator-lessons")) { +"${deck.lessons}" }
-                    span(classes("indicator", "indicator-reviews")) { +"${deck.reviews}" }
-                }
-            }
-        }
-    }
-
-    private fun MarkupBuilder.sourceTile(source: DashboardSource) {
-        button(Props(classes = listOf("dash-tile"), click = {
-            FlashcardsApp.pushSourceEditor(source.id)
-        })) {
-            div(classes("dash-tile-content")) {
-                div(classes("dash-tile-title")) { +source.name }
-                div {
-                    if (source.error) {
-                        span(classes("error-alert")) { +"⚠" }
+            component(DndReorderTileList(
+                sources,
+                contentType = "application/x-card-source",
+                click = { FlashcardsApp.pushSourceEditor(it.id) },
+                add = { FlashcardsApp.pushSourceCreation() },
+                reorder = { async { model.updateSourceOrder(it) } },
+                tileContent = { source ->
+                    div(classes("dash-tile-title")) { +source.name }
+                    div {
+                        if (source.error) {
+                            span(classes("error-alert")) { +"⚠" }
+                        }
+                        +source.type
                     }
-                    +source.type
                 }
-            }
+            ))
         }
     }
 }

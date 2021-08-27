@@ -15,12 +15,13 @@
 ## TODO
 
 * Features
-  * Allow reordering of sources & decks in account
   * Custom card source: Allow reordering groups
-  * Allow disabling lessons for certain sources per deck
+  * Custom card source: Search bar
+  * Custom card source: Card group details (iid, srs stage, last reviewed, next review)
   * Block-list and close-list support in reviews
     * Block-list: Hidden list of inputs that are rejected, even if close to an answer
     * close-list: Hidden list of inputs that are close but not correct, e.g., reading for a meaning card
+  * Allow disabling lessons for certain sources per deck
   * Improve WK data load performance
   * Review screen: Wrap up
   * View SRS stages on custom card editor
@@ -29,6 +30,8 @@
   * QoL: Add synonyms from review screen details foldout
   * Implement source and deck deletion
   * Change screen transitions to not blink (no loading text until 500ms have passed)
+  * Allow reordering sources and decks on mobile (use touch api instead of dnd)
 * Bugs
   * History: Reloading the page doesn't clear history, so need to handle or prevent going 
     "back" from first page
+  * Wanikani sources seems to lose connection easily on mobile during reviews

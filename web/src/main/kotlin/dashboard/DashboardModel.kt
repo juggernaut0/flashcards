@@ -54,6 +54,14 @@ class DashboardModel(
     suspend fun createDeck(request: DeckRequest): UUID {
         return flashcardsService.createDeck(request)
     }
+
+    suspend fun updateDeckOrder(newOrder: List<DashboardDeck>) {
+        flashcardsService.reorderDecks(newOrder.map { it.id })
+    }
+
+    suspend fun updateSourceOrder(newOrder: List<DashboardSource>) {
+        flashcardsService.reorderSources(newOrder.map { it.id })
+    }
 }
 
 class DashboardData(val decks: List<DashboardDeck>, val sources: List<DashboardSource>)

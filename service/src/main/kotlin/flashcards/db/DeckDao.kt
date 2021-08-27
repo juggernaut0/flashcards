@@ -7,6 +7,7 @@ import kotlinx.coroutines.reactive.asFlow
 import multiplatform.ktor.BadRequestException
 import org.jooq.DSLContext
 import org.jooq.Record
+import org.jooq.impl.DSL
 import java.util.*
 import javax.inject.Inject
 
@@ -25,6 +26,17 @@ class DeckDao @Inject constructor() {
         }
 
         return id
+    }
+
+    suspend fun reorderDecks(dsl: DSLContext, accountId: UUID, newOrder: List<UUID>) {
+        val rows = DSL.values(*newOrder.mapIndexed { i, id -> DSL.row(id, i) }.toTypedArray())
+        dsl.update(DECK)
+            .set(DECK.INDEX, rows.field(1, Int::class.java))
+            .from(rows)
+            .where(DECK.ID.eq(rows.field(0, UUID::class.java)))
+            .and(DECK.OWNER_ID.eq(accountId))
+            .asFlow()
+            .single()
     }
 
     suspend fun getDecks(dsl: DSLContext, accountId: UUID): List<DeckData> {

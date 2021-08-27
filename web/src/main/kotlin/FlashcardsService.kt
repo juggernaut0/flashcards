@@ -15,6 +15,10 @@ class FlashcardsService {
         return client.callApi(createSource, Unit, sourceRequest)
     }
 
+    suspend fun reorderSources(ids: List<UUID>) {
+        client.callApi(reorderSources, Unit, ids)
+    }
+
     suspend fun updateSource(id: UUID, sourceRequest: CardSourceRequest) {
         client.callApi(updateSource, IdParam(id), sourceRequest)
     }
@@ -25,6 +29,10 @@ class FlashcardsService {
 
     suspend fun createDeck(deckRequest: DeckRequest): UUID {
         return client.callApi(createDeck, Unit, deckRequest)
+    }
+
+    suspend fun reorderDecks(ids: List<UUID>) {
+        client.callApi(reorderDecks, Unit, ids)
     }
 
     suspend fun updateDeck(id: UUID, deckRequest: DeckRequest) {

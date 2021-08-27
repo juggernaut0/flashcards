@@ -14,6 +14,7 @@ import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 import org.jooq.DSLContext
 import org.jooq.JSONB
+import org.jooq.impl.DSL
 import java.util.*
 import javax.inject.Inject
 
@@ -40,6 +41,17 @@ class CardSourceDao @Inject constructor() {
         }
 
         return sourceId
+    }
+
+    suspend fun reorderSources(dsl: DSLContext, accountId: UUID, newOrder: List<UUID>) {
+        val rows = DSL.values(*newOrder.mapIndexed { i, id -> DSL.row(id, i) }.toTypedArray())
+        dsl.update(CARD_SOURCE)
+            .set(CARD_SOURCE.INDEX, rows.field(1, Int::class.java))
+            .from(rows)
+            .where(CARD_SOURCE.ID.eq(rows.field(0, UUID::class.java)))
+            .and(CARD_SOURCE.OWNER_ID.eq(accountId))
+            .asFlow()
+            .single()
     }
 
     suspend fun getSources(dsl: DSLContext, accountId: UUID): List<CardSourceData> {

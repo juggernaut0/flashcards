@@ -15,7 +15,6 @@
 ## TODO
 
 * Features
-  * Custom card source: Allow reordering groups
   * Custom card source: Search bar
   * Custom card source: Card group details (iid, srs stage, last reviewed, next review)
   * Block-list and close-list support in reviews
@@ -24,7 +23,6 @@
   * Allow disabling lessons for certain sources per deck
   * Improve WK data load performance
   * Review screen: Wrap up
-  * View SRS stages on custom card editor
   * Review summary improvements
     * show new SRS stage
   * QoL: Add synonyms from review screen details foldout

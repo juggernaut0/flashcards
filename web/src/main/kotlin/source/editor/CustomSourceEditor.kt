@@ -32,11 +32,45 @@ class CustomSourceEditor(source: CardSource.CustomCardSource, private val makeDi
     }
 
     override fun toRequest(): CardSourceRequest {
-        return CustomCardSourceRequest(groups = groups.map { it.toGroup() })
+        return CustomCardSourceRequest(groups = groups.mapNotNull { it.toGroup() })
     }
 
     private fun addGroup() {
         groups.add(CardGroupView(iid = nextIid()))
+        makeDirty()
+        render()
+    }
+
+    private fun removeGroup(group: CardGroupView) {
+        Modal.show(
+            title = "Remove Group",
+            body = componentOf { it.span { +"Are you sure you want to remove the card group?" } },
+            danger = true,
+        ) { ok ->
+            if (ok) {
+                groups.remove(group)
+                makeDirty()
+                render()
+            }
+        }
+    }
+
+    private fun moveGroupUp(group: CardGroupView) {
+        val i = groups.indexOf(group)
+        if (i == 0) return
+        val tmp = groups[i-1]
+        groups[i-1] = groups[i]
+        groups[i] = tmp
+        makeDirty()
+        render()
+    }
+
+    private fun moveGroupDown(group: CardGroupView) {
+        val i = groups.indexOf(group)
+        if (i == groups.lastIndex) return
+        val tmp = groups[i+1]
+        groups[i+1] = groups[i]
+        groups[i] = tmp
         makeDirty()
         render()
     }
@@ -63,7 +97,7 @@ class CustomSourceEditor(source: CardSource.CustomCardSource, private val makeDi
     }
 
     private fun export() {
-        val expGroups = groups.map { ExportCardGroup(it.toGroup().cards) }
+        val expGroups = groups.mapNotNull { it.toGroup() }.map { ExportCardGroup(it.cards) }
         val contents = prettyPrintJson.encodeToString(ListSerializer(ExportCardGroup.serializer()), expGroups)
         Modal.show("Export Cards", componentOf { it.pre { +contents } })
     }
@@ -87,8 +121,8 @@ class CustomSourceEditor(source: CardSource.CustomCardSource, private val makeDi
     }
 
     private inner class CardGroupView(private val cards: MutableList<Card> = mutableListOf(), private val iid: Int) : Component() {
-        fun toGroup(): CardGroup {
-            return CardGroup(cards = cards, iid = iid)
+        fun toGroup(): CardGroup? {
+            return if (cards.isNotEmpty()) CardGroup(cards = cards, iid = iid) else null
         }
 
         private fun addCard() {
@@ -106,8 +140,7 @@ class CustomSourceEditor(source: CardSource.CustomCardSource, private val makeDi
             cards.removeAt(i)
             makeDirty()
             if (cards.isEmpty()) {
-                groups.remove(this)
-                this@CustomSourceEditor.render()
+                removeGroup(this)
             } else {
                 render()
             }
@@ -127,6 +160,20 @@ class CustomSourceEditor(source: CardSource.CustomCardSource, private val makeDi
         override fun render() {
             val backClasses = "blur".takeUnless { showBacks }
             markup().div(classes("card-group")) {
+                div(classes("card-group-title")) {
+                    button(Props(
+                        classes = listOf("card-button", "card-button-edit"),
+                        click = { moveGroupUp(this@CardGroupView) },
+                    )) { +UP }
+                    button(Props(
+                        classes = listOf("card-button", "card-button-edit"),
+                        click = { moveGroupDown(this@CardGroupView) },
+                    )) { +DOWN }
+                    button(Props(
+                        classes = listOf("card-button", "card-button-del"),
+                        click = { removeGroup(this@CardGroupView) },
+                    )) { +X }
+                }
                 for ((i, card) in cards.withIndex()) {
                     div(classes("card-group-card")) {
                         div(classes("card-info")) {
@@ -191,6 +238,8 @@ class CustomSourceEditor(source: CardSource.CustomCardSource, private val makeDi
     companion object {
         private const val X = "\u00d7"
         private const val EDIT = "\u270E"
+        private const val UP = "\u25B4"
+        private const val DOWN = "\u25BE"
         private val prettyPrintJson = Json { prettyPrint = true; ignoreUnknownKeys = true }
     }
 }

@@ -25,11 +25,26 @@
     margin-bottom: 0.5rem;
 }
 
+@mixin card-group-item {
+    line-height: 1.5rem;
+    padding: 0.25rem;
+}
+
+.card-group-title {
+    display: flex;
+    background-color: $btnLightColor;
+    border-bottom: 1px solid $borderGray;
+    @include card-group-item;
+
+    :first-child {
+        margin-left: auto;
+    }
+}
+
 .card-group-card {
     display: flex;
-    padding: 0.25rem;
-    line-height: 1.5rem;
     border-bottom: 1px solid $borderGray;
+    @include card-group-item;
 }
 
 .card-info {
@@ -64,10 +79,9 @@
 .button-add-card {
     background-color: $btnLightColor;
     border: 0;
-    line-height: 1.5rem;
     text-align: center;
     width: 100%;
-    padding: 0.25rem;
+    @include card-group-item;
 
     &:hover {
         background-color: $btnLightHoverColor;

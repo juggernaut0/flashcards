@@ -6,6 +6,7 @@ import FlashcardsService
 import WanikaniService
 import asynclite.async
 import asynclite.delay
+import components.FlashcardsApp
 import components.Header
 import flashcards.api.v1.CardSourceRequest
 import kotlinx.serialization.SerialName
@@ -46,6 +47,7 @@ class SourceEditor(private val service: FlashcardsService, private val wanikaniS
     private fun delete() {
         async {
             service.deleteSource(sourceId)
+            FlashcardsApp.pushDashboard()
         }
     }
 

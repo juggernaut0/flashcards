@@ -24,7 +24,7 @@ class FlashcardsService {
     }
 
     suspend fun deleteSource(id: UUID) {
-        // TODO
+        client.callApi(deleteSource, IdParam(id))
     }
 
     suspend fun createDeck(deckRequest: DeckRequest): UUID {

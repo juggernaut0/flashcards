@@ -107,6 +107,14 @@ class CardSourceDao @Inject constructor() {
                 .single()
         }
     }
+
+    suspend fun deleteSource(dsl: DSLContext, accountId: UUID, sourceId: UUID) {
+        dsl.deleteFrom(CARD_SOURCE)
+            .where(CARD_SOURCE.OWNER_ID.eq(accountId))
+            .and(CARD_SOURCE.ID.eq(sourceId))
+            .asFlow()
+            .single()
+    }
 }
 
 data class CardSourceData(val cardSource: CardSourceRecord, val customCards: CustomCardSourceCardsRecord?) {

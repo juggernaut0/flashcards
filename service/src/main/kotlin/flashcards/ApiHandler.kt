@@ -20,6 +20,7 @@ fun Route.registerRoutes(handler: ApiHandler) {
         handleApi(createSource) { handler.createSource(auth as ValidatedToken, it) }
         handleApi(reorderSources) { handler.reorderSources(auth as ValidatedToken, it) }
         handleApi(updateSource) { handler.updateSource(auth as ValidatedToken, params.id, it) }
+        handleApi(deleteSource) { handler.deleteSource(auth as ValidatedToken, params.id) }
         handleApi(submitReview) { handler.submitReview(auth as ValidatedToken, params.sourceId, params.iid, it) }
 
         handleApi(createDeck) { handler.createDeck(auth as ValidatedToken, it) }
@@ -105,6 +106,21 @@ class ApiHandler @Inject constructor(
                 srsStage = dbGroup?.srsStage ?: 0,
                 lastReviewed = dbGroup?.lastReviewed ?: Instant.DISTANT_PAST,
             )
+        }
+    }
+
+    suspend fun deleteSource(token: ValidatedToken, id: UUID) {
+        val accountId = accountService.ensureAccount(token)
+        database.transaction { dsl ->
+            sourceDao.getSource(dsl, accountId, id, lock = true)
+                ?: throw BadRequestException("Source with id [$id] not found")
+
+            val decks = deckDao.getDecks(dsl, accountId)
+            if (decks.any { id in it.sources }) {
+                throw BadRequestException("Source with id [$id] is still in use by some decks")
+            }
+
+            sourceDao.deleteSource(dsl, accountId, id)
         }
     }
 

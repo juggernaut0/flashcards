@@ -15,6 +15,7 @@ import kui.*
 
 class CustomSourceEditor(source: CardSource.CustomCardSource, private val makeDirty: () -> Unit) : SourceEditor.Contents() {
     private var showBacks by renderOnSet(false)
+    private var search: String by renderOnSet("")
     private val groups = source.groups.mapTo(mutableListOf()) {
         CardGroupView(
             cards = it.cards.mapTo(mutableListOf()) { c ->
@@ -105,24 +106,37 @@ class CustomSourceEditor(source: CardSource.CustomCardSource, private val makeDi
     override fun render() {
         markup().div(classes("row")) {
             h3 { +"Custom Card Source" }
-            label {
-                checkbox(model = ::showBacks)
-                +"Show backs"
-            }
             div(classes("gapped-row")) {
                 button(Props(classes = listOf("button-confirm"), click = ::import)) { +"Import" }
                 button(Props(classes = listOf("button-confirm"), click = ::export)) { +"Export" }
             }
-            for (group in groups) {
-                component(group)
+            div(classes("gapped-row")) {
+                label(classes("inline")) {
+                    checkbox(model = ::showBacks)
+                    +"Show backs"
+                }
+                inputText(classes("form-input", "inline"), placeholder = "Search for cards", model = ::search)
             }
-            button(Props(classes = listOf("button-add-group"), click = ::addGroup)) { +"Add card group" }
+            for (group in groups) {
+                if (group.matchesSearch()) {
+                    component(group)
+                }
+            }
+            if (search.isBlank()) {
+                button(Props(classes = listOf("button-add-group"), click = ::addGroup)) { +"Add card group" }
+            }
         }
     }
 
     private inner class CardGroupView(private val cards: MutableList<Card> = mutableListOf(), private val iid: Int) : Component() {
         fun toGroup(): CardGroup? {
             return if (cards.isNotEmpty()) CardGroup(cards = cards, iid = iid) else null
+        }
+
+        fun matchesSearch(): Boolean {
+            if (search.isBlank()) return false
+            val search = search.trim()
+            return cards.any { it.front.contains(search, ignoreCase = true) }
         }
 
         private fun addCard() {

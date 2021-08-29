@@ -15,7 +15,6 @@
 ## TODO
 
 * Features
-  * Custom card source: Search bar
   * Custom card source: Card group details (iid, srs stage, last reviewed, next review)
   * Block-list and close-list support in reviews
     * Block-list: Hidden list of inputs that are rejected, even if close to an answer
@@ -23,8 +22,6 @@
   * Allow disabling lessons for certain sources per deck
   * Improve WK data load performance
   * Review screen: Wrap up
-  * Review summary improvements
-    * show new SRS stage
   * QoL: Add synonyms from review screen details foldout
   * Implement source and deck deletion
   * Change screen transitions to not blink (no loading text until 500ms have passed)

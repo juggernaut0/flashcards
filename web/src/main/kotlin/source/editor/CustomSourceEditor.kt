@@ -134,7 +134,7 @@ class CustomSourceEditor(source: CardSource.CustomCardSource, private val makeDi
         }
 
         fun matchesSearch(): Boolean {
-            if (search.isBlank()) return false
+            if (search.isBlank()) return true
             val search = search.trim()
             return cards.any { it.front.contains(search, ignoreCase = true) }
         }

@@ -36,7 +36,7 @@ dependencies {
 
     implementation("io.github.config4k:config4k:0.4.2")
 
-    implementation("dev.twarner.auth:auth-common:3")
+    implementation("dev.twarner.auth:auth-common:6")
 
     testImplementation(kotlin("test-junit"))
 }
@@ -44,20 +44,20 @@ dependencies {
 kotlin {
     sourceSets.all {
         languageSettings {
-            useExperimentalAnnotation("kotlin.RequiresOptIn")
+            optIn("kotlin.RequiresOptIn")
         }
     }
 }
 
 application {
-    mainClassName = "flashcards.MainKt"
+    mainClass.set("flashcards.MainKt")
 }
 
 jooq {
     configurations {
         create("main") {
-            version.set("3.15.1")
-            generateSchemaSourceOnCompilation.set(false)
+            version.set("3.15.2")
+            generateSchemaSourceOnCompilation.set(true)
             jooqConfiguration.apply {
                 jdbc.apply {
                     driver = "org.postgresql.Driver"
@@ -94,7 +94,7 @@ jooq {
 
 tasks {
     withType<KotlinCompile> {
-        kotlinOptions.jvmTarget = "1.8"
+        kotlinOptions.jvmTarget = "11"
     }
 
     val copyWeb by registering(Copy::class) {
@@ -106,12 +106,13 @@ tasks {
         group = "build"
         from("${project(":web").buildDir}/distributions")
         into("$buildDir/resources/main/static/js")
+        include("*.js", "*.js.map")
     }
 
     val copyCss by registering(Copy::class) {
         val runSass = project(":web").tasks.named<SassTask>("runSass")
         dependsOn(runSass)
-        from(runSass.flatMap { it.outputDir })
+        from(runSass.flatMap { it.outputDir.dir("styles") })
         into("$buildDir/resources/main/static/css")
     }
 

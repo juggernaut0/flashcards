@@ -8,7 +8,7 @@ dependencies {
     implementation(kotlin("stdlib-js"))
 
     implementation("com.github.juggernaut0.kui:kui:0.12.0")
-    implementation("dev.twarner.auth:auth-ui:3")
+    implementation("dev.twarner.auth:auth-ui:6")
 
     implementation(npm("idb-keyval", "5.0.6"))
 
@@ -33,7 +33,7 @@ kotlin {
         }
         sourceSets.all {
             languageSettings {
-                useExperimentalAnnotation("kotlin.RequiresOptIn")
+                optIn("kotlin.RequiresOptIn")
             }
         }
         binaries.executable()
@@ -41,8 +41,20 @@ kotlin {
 }
 
 tasks {
+    val assembleSassSrc by registering(Copy::class) {
+        val processResources = named<Copy>("processResources")
+        dependsOn(processResources, "jsJar")
+        from(processResources.map { it.destinationDir })
+        configurations["runtimeClasspath"].forEach {
+            from(zipTree(it.absolutePath).matching { include("**/*.scss") })
+        }
+        includeEmptyDirs = false
+        into(layout.buildDirectory.dir("sassSrc"))
+    }
+
     val runSass by registering(SassTask::class) {
-        inputDir.set(file("src/main/resources/styles"))
+        dependsOn(assembleSassSrc)
+        inputDir.set(layout.dir(assembleSassSrc.map { it.destinationDir }))
     }
 
     assemble {

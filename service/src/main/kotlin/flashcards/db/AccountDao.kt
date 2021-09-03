@@ -21,8 +21,9 @@ class AccountDao @Inject constructor() {
         return dsl.insertInto(FLASHCARDS_ACCOUNT)
             .set(FLASHCARDS_ACCOUNT.ID, UUID.randomUUID())
             .set(FLASHCARDS_ACCOUNT.USER_ID, userId)
-            .returning()
+            .returningResult(FLASHCARDS_ACCOUNT.asterisk())
             .asFlow()
             .first()
+            .into(FLASHCARDS_ACCOUNT) // returning() doesn't work properly in jooq 3.15, thus the asterisk & into
     }
 }

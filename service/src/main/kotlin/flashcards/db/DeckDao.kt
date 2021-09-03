@@ -115,11 +115,13 @@ class DeckDao @Inject constructor() {
             .asFlow()
             .single()
 
-        dsl.insertInto(DECK_CARD_SOURCE)
-            .columns(DECK_CARD_SOURCE.DECK_ID, DECK_CARD_SOURCE.SOURCE_ID, DECK_CARD_SOURCE.INDEX)
-            .let { sources.foldIndexed(it) { i, sql, sourceId -> sql.values(deckId, sourceId, i) } }
-            .asFlow()
-            .single()
+        if (sources.isNotEmpty()) {
+            dsl.insertInto(DECK_CARD_SOURCE)
+                .columns(DECK_CARD_SOURCE.DECK_ID, DECK_CARD_SOURCE.SOURCE_ID, DECK_CARD_SOURCE.INDEX)
+                .let { sources.foldIndexed(it) { i, sql, sourceId -> sql.values(deckId, sourceId, i) } }
+                .asFlow()
+                .single()
+        }
     }
 }
 

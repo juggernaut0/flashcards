@@ -82,6 +82,15 @@ class WanikaniAccount private constructor(
         }
     }
 
+    suspend fun reset() {
+        lastUpdated = null
+        error = false
+        assignments.clear()
+        subjects.clear()
+        studyMaterials.clear()
+        update(force = true)
+    }
+
     suspend fun getLessons(): List<WkObject<Assignment>> {
         update()
         return assignments.values.filter { it.data.srsStage == 0 }.sortedWith(assignmentComparator)
@@ -95,7 +104,8 @@ class WanikaniAccount private constructor(
         return assignments.values.filter {
             val level = subjects[it.data.subjectId]?.data?.level ?: 61
             val availableAt = it.data.availableAt
-            userLevel >= level && availableAt != null && availableAt <= now
+            val hidden = it.data.hidden
+            !hidden && userLevel >= level && availableAt != null && availableAt <= now
         }
     }
 
@@ -106,7 +116,8 @@ class WanikaniAccount private constructor(
             .filter {
                 val level = subjects[it.data.subjectId]?.data?.level ?: 61
                 val availableAt = it.data.availableAt
-                userLevel >= level && availableAt != null
+                val hidden = it.data.hidden
+                !hidden && userLevel >= level && availableAt != null
             }
             .groupingBy { it.data.availableAt!! }
             .eachCount()

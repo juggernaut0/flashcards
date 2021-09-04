@@ -11,6 +11,7 @@ import kui.renderOnSet
 
 class WanikaniSourceEditor(private val service: WanikaniService, private val source: WanikaniCardSource) : SourceEditor.Contents() {
     private var apiKey: String by renderOnSet(service.getApiKey(source.id) ?: "")
+    private var refreshMessage: String? by renderOnSet(null)
 
     override fun toRequest(): CardSourceRequest {
         // kinda a hack
@@ -24,9 +25,18 @@ class WanikaniSourceEditor(private val service: WanikaniService, private val sou
 
     private fun refresh() {
         async {
+            refreshMessage = "Refreshing..."
             service.forSource(source.id).update(force = true)
+            refreshMessage = null
         }
+    }
 
+    private fun reset() {
+        async {
+            refreshMessage = "Reseting Wanikani data... (this may take a while)"
+            service.forSource(source.id).reset()
+            refreshMessage = null
+        }
     }
 
     override fun render() {
@@ -45,7 +55,14 @@ class WanikaniSourceEditor(private val service: WanikaniService, private val sou
             } else if (!isKeyValid()) {
                 span(classes("error-alert")) { +"API Key invalid: double check it has been entered properly." }
             }
-            button(Props(classes = listOf("button-confirm"), click = ::refresh)) { +"Refresh WaniKani data" }
+            div(classes("gapped-row")) {
+                button(Props(classes = listOf("button-confirm"), click = ::refresh)) { +"Refresh WaniKani data" }
+                button(Props(classes = listOf("button-confirm"), click = ::reset)) { +"Reset WaniKani data" }
+                val refreshMessage = refreshMessage
+                if (refreshMessage != null) {
+                    div { +refreshMessage }
+                }
+            }
         }
     }
 

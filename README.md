@@ -15,7 +15,6 @@
 ## TODO
 
 * Features
-  * Custom card source: Card group details (iid, srs stage, last reviewed, next review)
   * Block-list and close-list support in reviews
     * Block-list: Hidden list of inputs that are rejected, even if close to an answer
     * close-list: Hidden list of inputs that are close but not correct, e.g., reading for a meaning card

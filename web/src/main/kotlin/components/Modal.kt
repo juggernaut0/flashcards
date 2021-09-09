@@ -59,10 +59,13 @@ object Modal : Component() {
                 h3 { +title }
                 body?.also { component(it) }
                 div(classes("modal-btns")) {
-                    button(Props(
-                        classes = listOf("modal-btn", if (danger) "modal-btn-danger" else "modal-btn-ok"),
-                        click = { close(true) })) {
-                        +(okText ?: "Ok")
+                    if (ok != null) {
+                        button(Props(
+                            classes = listOf("modal-btn", if (danger) "modal-btn-danger" else "modal-btn-ok"),
+                            click = { close(true) }
+                        )) {
+                            +(okText ?: "Ok")
+                        }
                     }
                     button(Props(
                         classes = listOf("modal-btn", "modal-btn-cancel"),

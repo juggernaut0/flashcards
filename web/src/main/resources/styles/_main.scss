@@ -26,7 +26,7 @@ h2,h3 {
     margin: 0.5rem;
 }
 
-@mixin button($color, $hoverColor) {
+@mixin button($color, $hoverColor, $disabledColor) {
     background-color: $color;
     color: white;
     border: 0;
@@ -34,17 +34,21 @@ h2,h3 {
     line-height: 1.5;
     padding: 0.375rem 0.75rem;
 
-    &:hover {
+    &:hover:enabled {
         background-color: $hoverColor;
+    }
+
+    &:disabled {
+        background-color: $disabledColor;
     }
 }
 
 .button-confirm {
-    @include button($btnColor, $btnHoverColor);
+    @include button($btnColor, $btnHoverColor, $btnColor);
 }
 
 .button-delete {
-    @include button($btnDangerColor, $btnDangerHoverColor);
+    @include button($btnDangerColor, $btnDangerHoverColor, $btnDangerDisabledColor);
 }
 
 .error-alert {
@@ -78,9 +82,23 @@ label {
     }
 }
 
+.rows {
+    display: flex;
+    flex-wrap: wrap;
+}
+
 .row {
     padding: 0.25rem 0;
     flex: 0 0 100%;
+}
+
+.flex-row {
+    @extend .row;
+    display: flex;
+}
+
+.col {
+    flex-grow: 1;
 }
 
 .link-button {

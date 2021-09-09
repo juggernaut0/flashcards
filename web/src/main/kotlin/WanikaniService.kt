@@ -1,7 +1,9 @@
 import asynclite.await
 import kotlinx.browser.localStorage
 import kotlinx.datetime.Clock
+import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.Instant
+import kotlinx.datetime.minus
 import kotlinx.serialization.*
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromDynamic
@@ -135,13 +137,17 @@ class WanikaniAccount private constructor(
 
     suspend fun startAssignment(assignmentId: Long) {
         if (error || wkCall == null) return
-        val updatedAssign = wkCall.startAssignment(assignmentId, Clock.System.now())
+        // allow one-second clock skew between local machine and WK
+        val time = Clock.System.now().minus(1, DateTimeUnit.SECOND)
+        val updatedAssign = wkCall.startAssignment(assignmentId, time)
         assignments[updatedAssign.id] = updatedAssign
     }
 
     suspend fun createReview(assignmentId: Long, meaningIncorrect: Int, readingIncorrect: Int) {
         if (error || wkCall == null) return
-        val review = wkCall.createReview(assignmentId, meaningIncorrect, readingIncorrect, Clock.System.now())
+        // allow one-second clock skew between local machine and WK
+        val time = Clock.System.now().minus(1, DateTimeUnit.SECOND)
+        val review = wkCall.createReview(assignmentId, meaningIncorrect, readingIncorrect, time)
         val assignment = review.resources_updated?.assignment!!
         assignments[assignment.id] = assignment
     }

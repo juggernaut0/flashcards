@@ -21,6 +21,7 @@ fun Route.registerRoutes(handler: ApiHandler) {
         handleApi(reorderSources) { handler.reorderSources(auth as ValidatedToken, it) }
         handleApi(updateSource) { handler.updateSource(auth as ValidatedToken, params.id, it) }
         handleApi(submitReview) { handler.submitReview(auth as ValidatedToken, params.sourceId, params.iid, it) }
+        handleApi(resetReview) { handler.resetReview(auth as ValidatedToken, params.sourceId, params.iid) }
 
         handleApi(createDeck) { handler.createDeck(auth as ValidatedToken, it) }
         handleApi(reorderDecks) { handler.reorderDecks(auth as ValidatedToken, it) }
@@ -103,7 +104,7 @@ class ApiHandler @Inject constructor(
                 cards = group.cards,
                 iid = group.iid,
                 srsStage = dbGroup?.srsStage ?: 0,
-                lastReviewed = dbGroup?.lastReviewed ?: Instant.DISTANT_PAST,
+                lastReviewed = dbGroup?.lastReviewed,
             )
         }
     }
@@ -126,6 +127,24 @@ class ApiHandler @Inject constructor(
                 if (it.iid != iid) it
                 else GraphqlCardGroup(cards = it.cards, iid = it.iid, srsStage = newStage, lastReviewed = now)
             }
+            sourceDao.updateSource(dsl, accountId, sourceId, customCards = newGroups)
+        }
+    }
+
+    suspend fun resetReview(token: ValidatedToken, sourceId: UUID, iid: Int) {
+        val accountId = accountService.ensureAccount(token)
+        database.transaction { dsl ->
+            val source = sourceDao.getSource(dsl, accountId, sourceId, lock = true)
+                ?: throw BadRequestException("Source with id [$sourceId] not found")
+            val groups = source.groups
+                ?: throw BadRequestException("Can only reset reviews for custom card sources")
+            val groupIndex = groups.indexOfFirst { it.iid == iid }
+                .takeUnless { it < 0 }
+                ?: throw BadRequestException("Card Group with iid [$iid] not found")
+            val newGroup = groups[groupIndex].let {
+                GraphqlCardGroup(cards = it.cards, iid = it.iid, srsStage = 0, lastReviewed = null)
+            }
+            val newGroups = groups.toMutableList().also { it[groupIndex] = newGroup }
             sourceDao.updateSource(dsl, accountId, sourceId, customCards = newGroups)
         }
     }

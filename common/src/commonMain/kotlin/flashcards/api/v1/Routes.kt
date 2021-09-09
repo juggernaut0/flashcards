@@ -23,6 +23,7 @@ val createSource = ApiRoute(Method.POST, pathOf(Unit.serializer(), "$APP_CONTEXT
 val reorderSources = ApiRoute(Method.PUT, pathOf(Unit.serializer(), "$APP_CONTEXT/api/v1/sources"), Unit.serializer(), ListSerializer(UUIDSerializer))
 val updateSource = ApiRoute(Method.PUT, pathOf(IdParam.serializer(), "$APP_CONTEXT/api/v1/sources/{id}"), Unit.serializer(), CardSourceRequest.serializer())
 val submitReview = ApiRoute(Method.POST, pathOf(ReviewParam.serializer(), "$APP_CONTEXT/api/v1/sources/{sourceId}/{iid}"), Unit.serializer(), ReviewRequest.serializer())
+val resetReview = ApiRoute(Method.POST, pathOf(ReviewParam.serializer(), "$APP_CONTEXT/api/v1/sources/{sourceId}/{iid}/reset"), Unit.serializer())
 val createDeck = ApiRoute(Method.POST, pathOf(Unit.serializer(), "$APP_CONTEXT/api/v1/decks"), UUIDSerializer, DeckRequest.serializer())
 val reorderDecks = ApiRoute(Method.PUT, pathOf(Unit.serializer(), "$APP_CONTEXT/api/v1/decks"), Unit.serializer(), ListSerializer(UUIDSerializer))
 val updateDeck = ApiRoute(Method.PUT, pathOf(IdParam.serializer(), "$APP_CONTEXT/api/v1/decks/{id}"), Unit.serializer(), DeckRequest.serializer())

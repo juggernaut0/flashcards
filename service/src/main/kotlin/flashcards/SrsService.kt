@@ -56,7 +56,8 @@ class SrsService @Inject constructor(
         val stages = getDefaultStages()
         if (cardGroup.srsStage == 0) return null
         if (cardGroup.srsStage !in stages.indices) return null
-        return (cardGroup.lastReviewed.toJavaInstant() + Duration.ofSeconds(stages[cardGroup.srsStage].toLong()))
+        val lastReviewed = cardGroup.lastReviewed?.toJavaInstant() ?: Instant.MIN
+        return (lastReviewed + Duration.ofSeconds(stages[cardGroup.srsStage].toLong()))
             .truncatedTo(ChronoUnit.HOURS)
     }
 }

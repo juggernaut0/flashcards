@@ -85,7 +85,11 @@ class GraphQLHandler @Inject constructor(
                 }
             }
         }
-        type(CardGroup.serializer())
+        type(CardGroup.serializer()) {
+            field("nextReview", kotlinx.datetime.Instant.serializer().nullable) {
+                srsService.availableAt(this)?.toKotlinInstant()
+            }
+        }
         type(Card.serializer())
         type(Deck.serializer()) {
             field("sources", ListSerializer(CardSource.serializer())) { sources().toList() }

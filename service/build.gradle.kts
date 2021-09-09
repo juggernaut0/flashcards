@@ -32,7 +32,7 @@ dependencies {
     jooqGenerator("org.postgresql:postgresql:42.2.23")
     implementation("io.r2dbc:r2dbc-postgresql:0.8.8.RELEASE")
     implementation("io.r2dbc:r2dbc-pool:0.8.7.RELEASE")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.5.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.5.2")
 
     implementation("io.github.config4k:config4k:0.4.2")
 

@@ -8,6 +8,7 @@ import asynclite.async
 import asynclite.delay
 import components.Header
 import flashcards.api.v1.CardSourceRequest
+import kotlinx.datetime.Instant
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers
@@ -29,7 +30,7 @@ class SourceEditor(private val service: FlashcardsService, private val wanikaniS
         async {
             val source = service.query(Query.serializer(), "id" to sourceId).source
             inner = when(source) {
-                is CardSource.CustomCardSource -> CustomSourceEditor(source, ::makeDirty)
+                is CardSource.CustomCardSource -> CustomSourceEditor(service, source, ::makeDirty)
                 is CardSource.WanikaniCardSource -> WanikaniSourceEditor(wanikaniService, source)
             }
             this.source = source
@@ -98,7 +99,7 @@ class SourceEditor(private val service: FlashcardsService, private val wanikaniS
     sealed class CardSource {
         @Serializable
         @SerialName("CustomCardSource")
-        class CustomCardSource(override val name: String, val groups: List<CardGroup>) : CardSource()
+        class CustomCardSource(override val name: String, val id: UUID, val groups: List<CardGroup>) : CardSource()
         @Serializable
         @SerialName("WanikaniCardSource")
         class WanikaniCardSource(override val name: String, val id: UUID) : CardSource()
@@ -107,7 +108,7 @@ class SourceEditor(private val service: FlashcardsService, private val wanikaniS
     }
 
     @Serializable
-    class CardGroup(val cards: List<Card>, val iid: Int)
+    class CardGroup(val cards: List<Card>, val iid: Int, val srsStage: Int, val lastReviewed: Instant?, val nextReview: Instant?)
 
     @Serializable
     class Card(val front: String, val back: String, val prompt: String?, val synonyms: List<String>?, val notes: String?)

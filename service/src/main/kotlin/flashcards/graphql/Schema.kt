@@ -19,7 +19,7 @@ sealed class CardSource {
 }
 
 @Serializable
-data class CardGroup(val cards: List<Card>, val iid: Int, val srsStage: Int, val lastReviewed: Instant)
+data class CardGroup(val cards: List<Card>, val iid: Int, val srsStage: Int, val lastReviewed: Instant?)
 typealias Card = flashcards.api.v1.Card
 
 @Serializable

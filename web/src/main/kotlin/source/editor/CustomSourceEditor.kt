@@ -1,5 +1,6 @@
 package source.editor
 
+import FlashcardsService
 import asynclite.async
 import components.Modal
 import components.TagInput
@@ -8,22 +9,24 @@ import source.editor.SourceEditor.CardSource
 import flashcards.api.v1.Card
 import flashcards.api.v1.CardGroup
 import flashcards.api.v1.CustomCardSourceRequest
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 import kui.*
 
-class CustomSourceEditor(source: CardSource.CustomCardSource, private val makeDirty: () -> Unit) : SourceEditor.Contents() {
+class CustomSourceEditor(
+    private val flashcardsService: FlashcardsService,
+    source: CardSource.CustomCardSource,
+    private val makeDirty: () -> Unit,
+) : SourceEditor.Contents() {
     private var showBacks by renderOnSet(false)
     private var search: String by renderOnSet("")
-    private val groups = source.groups.mapTo(mutableListOf()) {
-        CardGroupView(
-            cards = it.cards.mapTo(mutableListOf()) { c ->
-                Card(front = c.front, back = c.back, prompt = c.prompt, synonyms = c.synonyms, notes = c.notes)
-            },
-            iid = it.iid
-        )
-    }
+    private val sourceId = source.id
+    private val groups = source.groups.mapTo(mutableListOf()) { CardGroupView(it) }
     private var iidSeq = source.groups.maxOfOrNull { it.iid }?.let { it + 1 } ?: 0
 
     private fun nextIid(): Int {
@@ -37,7 +40,7 @@ class CustomSourceEditor(source: CardSource.CustomCardSource, private val makeDi
     }
 
     private fun addGroup() {
-        groups.add(CardGroupView(iid = nextIid()))
+        groups.add(CardGroupView(nextIid()))
         makeDirty()
         render()
     }
@@ -89,7 +92,7 @@ class CustomSourceEditor(source: CardSource.CustomCardSource, private val makeDi
             if (ok) {
                 val impGroups = prettyPrintJson.decodeFromString(ListSerializer(ExportCardGroup.serializer()), contents.text)
                 for (group in impGroups) {
-                    groups.add(CardGroupView(group.cards.toMutableList(), nextIid()))
+                    groups.add(CardGroupView(nextIid(), cards = group.cards.toMutableList()))
                 }
                 makeDirty()
                 render()
@@ -128,7 +131,23 @@ class CustomSourceEditor(source: CardSource.CustomCardSource, private val makeDi
         }
     }
 
-    private inner class CardGroupView(private val cards: MutableList<Card> = mutableListOf(), private val iid: Int) : Component() {
+    private inner class CardGroupView(
+        private val iid: Int,
+        private val cards: MutableList<Card> = mutableListOf(),
+        private val srsStage: Int = 0,
+        private val lastReviewed: Instant? = null,
+        private val nextReview: Instant? = null,
+    ) : Component() {
+        constructor(cardGroup: SourceEditor.CardGroup) : this(
+            iid = cardGroup.iid,
+            cards = cardGroup.cards.mapTo(mutableListOf()) { c ->
+                Card(front = c.front, back = c.back, prompt = c.prompt, synonyms = c.synonyms, notes = c.notes)
+            },
+            srsStage = cardGroup.srsStage,
+            lastReviewed = cardGroup.lastReviewed,
+            nextReview = cardGroup.nextReview,
+        )
+
         fun toGroup(): CardGroup? {
             return if (cards.isNotEmpty()) CardGroup(cards = cards, iid = iid) else null
         }
@@ -171,10 +190,27 @@ class CustomSourceEditor(source: CardSource.CustomCardSource, private val makeDi
             }
         }
 
+        private fun showInfo() {
+            val contents = CardGroupInfoContents(
+                iid = iid,
+                srsInfo = SrsInfo(
+                    stage = srsStage,
+                    lastReviewed = lastReviewed,
+                    nextReview = nextReview,
+                ),
+                reset = { async { flashcardsService.resetReview(sourceId, iid) } }
+            )
+            Modal.show("Card Group Info", contents)
+        }
+
         override fun render() {
             val backClasses = "blur".takeUnless { showBacks }
             markup().div(classes("card-group")) {
                 div(classes("card-group-title")) {
+                    button(Props(
+                        classes = listOf("card-button", "card-button-edit"),
+                        click = { showInfo() },
+                    )) { +INFO }
                     button(Props(
                         classes = listOf("card-button", "card-button-edit"),
                         click = { moveGroupUp(this@CardGroupView) },
@@ -246,14 +282,87 @@ class CustomSourceEditor(source: CardSource.CustomCardSource, private val makeDi
         }
     }
 
+    private class CardGroupInfoContents(
+        private val iid: Int,
+        private var srsInfo: SrsInfo,
+        private val reset: () -> Unit
+    ) : Component() {
+        private var resetting by renderOnSet(false)
+
+        private fun resetConfirm() {
+            resetting = if (resetting) {
+                reset()
+                srsInfo = SrsInfo(0, null, null)
+                false
+            } else {
+                true
+            }
+        }
+
+        override fun render() {
+            markup().div(classes("rows")) {
+                div(classes("flex-row")) {
+                    div(classes("col")) {
+                        h5 { +"IID" }
+                        p { +"$iid" }
+                    }
+                }
+                div(classes("flex-row")) {
+                    div(classes("col")) {
+                        h5 { +"SRS Stage" }
+                        p { if (srsInfo.stage != 0) +"${srsInfo.stage}" else +"In Lesson" }
+                    }
+                    div(classes("col")) {
+                        h5 { +"Last Reviewed" }
+                        p { +lastReviewed() }
+                    }
+                    div(classes("col")) {
+                        h5 { +"Next Review" }
+                        p { +nextReview() }
+                    }
+                }
+                div(classes("flex-row")) {
+                    div(classes("col")) {
+                        button(Props(
+                            classes = listOf("button-delete"),
+                            click = { resetConfirm() },
+                            disabled = srsInfo.stage == 0,
+                        )) { if (!resetting) +"Reset SRS" else +"Are you sure?" }
+                    }
+                }
+            }
+        }
+
+        private fun lastReviewed(): String {
+            val lastReviewed = srsInfo.lastReviewed ?: return "Never"
+            return display(lastReviewed)
+        }
+
+        private fun nextReview(): String {
+            val nextReview = srsInfo.nextReview ?: return "Never"
+            return if (nextReview <= Clock.System.now()) "Now" else display(nextReview)
+        }
+
+        private fun display(instant: Instant): String {
+            val local = instant.toLocalDateTime(TimeZone.currentSystemDefault())
+            val mon = local.month.name.substring(0, 3).lowercase().replaceFirstChar { it.uppercaseChar() }
+            return "$mon ${local.dayOfMonth} ${local.hour.pad0(2)}:${local.minute.pad0(2)}"
+        }
+
+        private fun Int.pad0(n: Int): String = toString().padStart(n, '0')
+    }
+
     @Serializable
     private class ExportCardGroup(val cards: List<Card>)
+
+    private class SrsInfo(val stage: Int, val lastReviewed: Instant?, val nextReview: Instant?)
 
     companion object {
         private const val X = "\u00d7"
         private const val EDIT = "\u270E"
         private const val UP = "\u25B4"
         private const val DOWN = "\u25BE"
-        private val prettyPrintJson = Json { prettyPrint = true; ignoreUnknownKeys = true }
+        private const val INFO = "\u2139"
+        private val prettyPrintJson = Json { prettyPrint = true; ignoreUnknownKeys = true; encodeDefaults = false }
     }
 }

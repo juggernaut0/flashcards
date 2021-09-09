@@ -42,6 +42,10 @@ class FlashcardsService {
     suspend fun submitReview(sourceId: UUID, iid: Int, request: ReviewRequest) {
         client.callApi(submitReview, ReviewParam(sourceId, iid), request)
     }
+
+    suspend fun resetReview(sourceId: UUID, iid: Int) {
+        client.callApi(resetReview, ReviewParam(sourceId, iid))
+    }
 }
 
 fun Iterable<Pair<String, String>>.asHeaders(): Headers = object : Headers, Iterable<Pair<String, String>> by this {}

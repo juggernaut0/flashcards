@@ -26,6 +26,8 @@ data class Card(
     val back: String,
     val prompt: String? = null,
     val synonyms: List<String>? = null,
+    val blockList: List<String>? = null,
+    val closeList: List<String>? = null,
     val notes: String? = null,
 )
 

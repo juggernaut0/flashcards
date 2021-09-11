@@ -12,7 +12,7 @@ class WkCollection<T>(val pages: Pages, val data: List<WkObject<T>>)
 class Pages(@SerialName("next_url") val nextUrl: String?)
 
 @Serializable
-class WkObject<T>(val id: Long = 0, val `object`: String, val data: T, val resources_updated: ResourcesUpdated? = null)
+class WkObject<out T>(val id: Long = 0, val `object`: String, val data: T, val resources_updated: ResourcesUpdated? = null)
 
 @Serializable
 class ResourcesUpdated(val assignment: WkObject<Assignment>? = null)
@@ -34,6 +34,7 @@ sealed class Subject {
 
 @Serializable
 class RadicalSubject(
+    val auxiliary_meanings: List<AuxiliaryMeaning> = emptyList(),
     val characters: String?,
     @SerialName("character_images") val characterImages: List<Resource>,
     override val level: Int,
@@ -44,6 +45,7 @@ class RadicalSubject(
 
 @Serializable
 class KanjiSubject(
+    val auxiliary_meanings: List<AuxiliaryMeaning> = emptyList(),
     val characters: String,
     override val level: Int,
     val meanings: List<SubjectMeaning>,
@@ -64,6 +66,7 @@ class KanjiReading(
 
 @Serializable
 class VocabularySubject(
+    val auxiliary_meanings: List<AuxiliaryMeaning> = emptyList(),
     val characters: String,
     override val level: Int,
     val meanings: List<SubjectMeaning>,
@@ -91,6 +94,9 @@ class Resource(
 
 @Serializable
 class SubjectMeaning(val meaning: String, val primary: Boolean)
+
+@Serializable
+class AuxiliaryMeaning(val meaning: String, val type: String)
 
 @Serializable
 class Review(

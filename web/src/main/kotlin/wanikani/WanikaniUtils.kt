@@ -1,5 +1,6 @@
 package wanikani
 
+import kana.kanaToRomaji
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonPrimitive
@@ -15,12 +16,14 @@ fun toCardGroup(assignment: WkObject<Assignment>, subject: WkObject<Subject>, st
                 }?.url
                 ?: data.slug
             val (pri, syn) = data.meanings.partition { it.primary }
+            val aux = data.auxiliary_meanings.groupBy({ it.type }, { it.meaning })
             listOf(Reviewer.Card(
                 front = front,
                 back = pri.first().meaning,
                 prompt = "Radical Meaning",
-                synonyms = syn.map { it.meaning } + userSynonyms,
-                notes = data.meaningMnemonic
+                synonyms = syn.map { it.meaning } + userSynonyms + aux["whitelist"].orEmpty(),
+                blockList = aux["blacklist"],
+                notes = data.meaningMnemonic,
             ))
         }
         is KanjiSubject -> {
@@ -36,14 +39,17 @@ fun toCardGroup(assignment: WkObject<Assignment>, subject: WkObject<Subject>, st
             }
             val readingNotes = data.reading_mnemonic + data.reading_hint?.let { "\n\n$it" }.orEmpty()
             val (meaning, meaningSyn) = data.meanings.partition { it.primary }
+            val aux = data.auxiliary_meanings.groupBy({ it.type }, { it.meaning })
             val meaningNotes = data.meaning_mnemonic + data.meaning_hint?.let { "\n\n$it" }.orEmpty()
             listOf(
                 Reviewer.Card(
                     front = front,
                     back = meaning.first().meaning,
                     prompt = "Kanji Meaning",
-                    synonyms = meaningSyn.map { it.meaning } + userSynonyms,
-                    notes = meaningNotes
+                    synonyms = meaningSyn.map { it.meaning } + userSynonyms + aux["whitelist"].orEmpty(),
+                    blockList = aux["blacklist"],
+                    closeList = readings.map { kanaToRomaji(it.reading) },
+                    notes = meaningNotes,
                 ),
                 Reviewer.Card(
                     front = front,
@@ -56,9 +62,11 @@ fun toCardGroup(assignment: WkObject<Assignment>, subject: WkObject<Subject>, st
         }
         is VocabularySubject -> {
             val front = data.characters
-            val (reading, readingSyn) = data.readings.filter { it.accepted_answer }.partition { it.primary }
+            val readings = data.readings.filter { it.accepted_answer }
+            val (reading, readingSyn) = readings.partition { it.primary }
             val readingNotes = data.reading_mnemonic + data.reading_hint?.let { "\n\n$it" }.orEmpty()
             val (meaning, meaningSyn) = data.meanings.partition { it.primary }
+            val aux = data.auxiliary_meanings.groupBy({ it.type }, { it.meaning })
             val meaningNotes = data.meaning_mnemonic + data.meaning_hint?.let { "\n\n$it" }.orEmpty()
             val audioUrls = data.pronunciation_audios
                 .filter {
@@ -74,8 +82,10 @@ fun toCardGroup(assignment: WkObject<Assignment>, subject: WkObject<Subject>, st
                     front = front,
                     back = meaning.first().meaning,
                     prompt = "Vocab Meaning",
-                    synonyms = meaningSyn.map { it.meaning } + userSynonyms,
-                    notes = meaningNotes
+                    synonyms = meaningSyn.map { it.meaning } + userSynonyms + aux["whitelist"].orEmpty(),
+                    blockList = aux["blacklist"],
+                    closeList = readings.map { kanaToRomaji(it.reading) },
+                    notes = meaningNotes,
                 ),
                 Reviewer.Card(
                     front = front,

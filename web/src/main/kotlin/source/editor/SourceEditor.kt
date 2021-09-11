@@ -7,6 +7,7 @@ import WanikaniService
 import asynclite.async
 import asynclite.delay
 import components.Header
+import flashcards.api.v1.Card
 import flashcards.api.v1.CardSourceRequest
 import kotlinx.datetime.Instant
 import kotlinx.serialization.SerialName
@@ -109,7 +110,4 @@ class SourceEditor(private val service: FlashcardsService, private val wanikaniS
 
     @Serializable
     class CardGroup(val cards: List<Card>, val iid: Int, val srsStage: Int, val lastReviewed: Instant?, val nextReview: Instant?)
-
-    @Serializable
-    class Card(val front: String, val back: String, val prompt: String?, val synonyms: List<String>?, val notes: String?)
 }

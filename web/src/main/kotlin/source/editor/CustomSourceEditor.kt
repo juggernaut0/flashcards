@@ -2,6 +2,7 @@ package source.editor
 
 import FlashcardsService
 import asynclite.async
+import components.Collapse
 import components.Modal
 import components.TagInput
 import flashcards.api.v1.CardSourceRequest
@@ -140,9 +141,7 @@ class CustomSourceEditor(
     ) : Component() {
         constructor(cardGroup: SourceEditor.CardGroup) : this(
             iid = cardGroup.iid,
-            cards = cardGroup.cards.mapTo(mutableListOf()) { c ->
-                Card(front = c.front, back = c.back, prompt = c.prompt, synonyms = c.synonyms, notes = c.notes)
-            },
+            cards = cardGroup.cards.toMutableList(),
             srsStage = cardGroup.srsStage,
             lastReviewed = cardGroup.lastReviewed,
             nextReview = cardGroup.nextReview,
@@ -244,10 +243,12 @@ class CustomSourceEditor(
         var back = card?.back ?: ""
         var prompt = card?.prompt ?: ""
         val synonyms = card?.synonyms.orEmpty().toMutableList()
+        val blockList = card?.blockList.orEmpty().toMutableList()
+        val closeList = card?.closeList.orEmpty().toMutableList()
         var notes = card?.notes ?: ""
 
         override fun render() {
-            markup().div {
+            markup().div(classes("rows")) {
                 label {
                     +"Front"
                     inputText(classes("form-input"), model = ::front)
@@ -260,13 +261,31 @@ class CustomSourceEditor(
                     +"Prompt"
                     inputText(classes("form-input"), model = ::prompt)
                 }
-                label {
-                    +"Synonyms"
-                    component(TagInput(synonyms))
-                }
-                label {
-                    +"Notes"
-                    textarea(classes("form-input"), model = ::notes)
+                component(Collapse(classes("row"), showing = false)) {
+                    slot(Collapse.Slot.Header(showing = true)) {
+                        +"$DOWN More Fields"
+                    }
+                    slot(Collapse.Slot.Header(showing = false)) {
+                        +"$RIGHT More Fields"
+                    }
+                    slot(Collapse.Slot.Body) {
+                        label {
+                            +"Synonyms"
+                            component(TagInput(synonyms))
+                        }
+                        label {
+                            +"Block List"
+                            component(TagInput(blockList))
+                        }
+                        label {
+                            +"Close List"
+                            component(TagInput(closeList))
+                        }
+                        label {
+                            +"Notes"
+                            textarea(classes("form-input"), model = ::notes)
+                        }
+                    }
                 }
             }
         }
@@ -277,6 +296,8 @@ class CustomSourceEditor(
                 back = back,
                 prompt = prompt.takeIf { it.isNotBlank() },
                 synonyms = synonyms.takeIf { it.isNotEmpty() },
+                blockList = blockList.takeIf { it.isNotEmpty() },
+                closeList = closeList.takeIf { it.isNotEmpty() },
                 notes = notes.takeIf { it.isNotBlank() },
             )
         }
@@ -362,6 +383,7 @@ class CustomSourceEditor(
         private const val EDIT = "\u270E"
         private const val UP = "\u25B4"
         private const val DOWN = "\u25BE"
+        private const val RIGHT = "\u25B8"
         private const val INFO = "\u2139"
         private val prettyPrintJson = Json { prettyPrint = true; ignoreUnknownKeys = true; encodeDefaults = false }
     }

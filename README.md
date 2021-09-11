@@ -15,9 +15,6 @@
 ## TODO
 
 * Features
-  * Block-list and close-list support in reviews
-    * Block-list: Hidden list of inputs that are rejected, even if close to an answer
-    * close-list: Hidden list of inputs that are close but not correct, e.g., reading for a meaning card
   * Allow disabling lessons for certain sources per deck
   * Improve WK data load performance
   * Review screen: Wrap up

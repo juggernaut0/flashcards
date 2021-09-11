@@ -4,28 +4,33 @@ import kana.isKana
 import kana.kanaToRomaji
 
 @Suppress("NAME_SHADOWING")
-fun fuzzyMatch(given: String, expected: String): FuzzyMatchResult {
+fun fuzzyMatch(given: String, expected: String, blockList: List<String>, closeList: List<String>): FuzzyMatchResult {
     val given = given.trim().lowercase().replace(removeFromAnswerRegex, "")
     val expected = expected.trim().lowercase().replace(removeFromAnswerRegex, "")
 
     if (given == expected) return FuzzyMatchResult.ALLOW
     if (given.isBlank()) return FuzzyMatchResult.CLOSE
-    if (!expected.isKana() && given.length <=2 && expected.length <= 2) return FuzzyMatchResult.REJECT
+    if (given in blockList) return FuzzyMatchResult.REJECT
 
-    if (expected.isKana() && given.any { it in 'a'..'z' || it.isWhitespace() }) return FuzzyMatchResult.KANA_EXPECTED
+    val isKana = expected.isKana()
+    if (!isKana && given.length <=2 && expected.length <= 2) return FuzzyMatchResult.REJECT
 
-    val lev = if (expected.isKana()) {
+    if (isKana && given.any { it in 'a'..'z' || it.isWhitespace() }) return FuzzyMatchResult.KANA_EXPECTED
+
+    val lev = if (isKana) {
         levenshtein(kanaToRomaji(given), kanaToRomaji(expected))
     } else {
         levenshtein(given, expected)
     }
-    return if (expected.isKana()) {
-        if (lev <= 1) FuzzyMatchResult.CLOSE
-        else FuzzyMatchResult.REJECT
+    if (isKana) {
+        if (lev <= 1) return FuzzyMatchResult.CLOSE
     } else {
-        if (lev <= 2 && expected.length > 2 && given.length > 2) FuzzyMatchResult.ALLOW_WITH_TYPO
-        else FuzzyMatchResult.REJECT
+        if (lev <= 2 && expected.length > 2 && given.length > 2) return FuzzyMatchResult.ALLOW_WITH_TYPO
     }
+
+    if (given in closeList) return FuzzyMatchResult.CLOSE
+
+    return FuzzyMatchResult.REJECT
 }
 
 private val removeFromAnswerRegex = Regex("[,.\\-']")

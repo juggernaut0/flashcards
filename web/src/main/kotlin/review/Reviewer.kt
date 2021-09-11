@@ -101,7 +101,7 @@ class Reviewer(
         when (inputState) {
             InputState.WAITING -> {
                 val result = (sequenceOf(item.card.back) + item.card.synonyms.orEmpty())
-                    .map { fuzzyMatch(input, it) }
+                    .map { fuzzyMatch(input, it, item.card.blockList.orEmpty(), item.card.closeList.orEmpty()) }
                     .reduce { a, b -> a.reduce(b)}
                 when (result) {
                     FuzzyMatchResult.ALLOW, FuzzyMatchResult.ALLOW_WITH_TYPO -> {
@@ -128,7 +128,7 @@ class Reviewer(
                         setMistakeText("")
                     }
                     FuzzyMatchResult.CLOSE -> {
-                        setMistakeText("So close! Double check your answer for typos.")
+                        setMistakeText("So close! Double check your answer for errors.")
                     }
                     FuzzyMatchResult.KANA_EXPECTED -> {
                         setMistakeText("Give your answer in hiragana.")
@@ -270,6 +270,8 @@ class Reviewer(
         val back: String,
         val prompt: String? = null,
         val synonyms: List<String>? = null,
+        val blockList: List<String>? = null,
+        val closeList: List<String>? = null,
         val notes: String? = null,
         @Transient val audioUrls: List<AudioUrl>? = null
     ) {

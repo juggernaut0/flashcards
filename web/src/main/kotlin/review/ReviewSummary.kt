@@ -5,7 +5,7 @@ import kui.Component
 import kui.MarkupBuilder
 import kui.classes
 
-class ReviewSummary(data: List<ReviewSummaryItem>) : Component() {
+class ReviewSummary : Component() {
     private val correct: List<ReviewSummaryItem>
     private val incorrect: List<ReviewSummaryItem>
 
@@ -36,6 +36,10 @@ class ReviewSummary(data: List<ReviewSummaryItem>) : Component() {
                 hr()
             }
         }
+    }
+
+    companion object {
+        var data: List<ReviewSummaryItem> = emptyList()
     }
 }
 

@@ -18,7 +18,6 @@ fun main() {
                 return@async
             }
             kui.mountComponent(document.body!!, FlashcardsApp)
-            FlashcardsApp.pushDashboard()
         }
     } else {
         AuthPanel.Styles.apply()

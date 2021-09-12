@@ -25,4 +25,4 @@
 * Bugs
   * History: Reloading the page doesn't clear history, so need to handle or prevent going 
     "back" from first page
-  * Wanikani sources seems to lose connection easily on mobile during reviews
+  * Drag and drop doesn't work on chrome

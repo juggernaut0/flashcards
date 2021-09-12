@@ -20,65 +20,78 @@ import source.editor.SourceEditor
 
 object FlashcardsApp : Component() {
     private val emptyComponent = componentOf { it.div {  } }
-    private val history: MutableList<Component> = mutableListOf()
-    private var current: Int = -1
-
-    init {
-        window.onpopstate = { evt ->
-            current = evt.state as? Int? ?: 0
-            render()
-        }
-    }
+    private var current: Component = emptyComponent
 
     private val flashcardsService = FlashcardsService()
     private val wanikaniService = WanikaniService()
 
+    init {
+        current = componentFromRoute(window.location.hash)
+        window.onpopstate = { _ ->
+            current = componentFromRoute(window.location.hash)
+            render()
+        }
+    }
+
     fun pushDashboard() {
-        pushState(Dashboard(DashboardModel(flashcardsService, wanikaniService)))
+        pushState("#/")
     }
 
     fun pushDeckOverview(deckId: UUID) {
-        pushState(DeckOverview(DeckOverviewModel(flashcardsService, wanikaniService, deckId)))
+        pushState("#/deck/$deckId")
     }
 
     fun pushLessonScreen(deckId: UUID) {
-        pushState(LessonScreen(LessonModel(flashcardsService, wanikaniService, deckId)))
+        pushState("#/deck/$deckId/lesson")
     }
 
     fun pushReviewScreen(deckId: UUID) {
-        pushState(ReviewScreen(ReviewModel(flashcardsService, wanikaniService, deckId)))
+        pushState("#/deck/$deckId/review")
     }
 
     fun pushReviewSummary(summaryData: ReviewSummaryData) {
-        pushState(ReviewSummary(summaryData))
+        ReviewSummary.data = summaryData
+        pushState("#/reviewSummary")
     }
 
     fun pushSourceCreation() {
-        pushState(SourceCreation(flashcardsService, wanikaniService))
+        pushState("#/source/create")
     }
 
     fun pushSourceEditor(sourceId: UUID) {
-        pushState(SourceEditor(flashcardsService, wanikaniService, sourceId))
+        pushState("#/source/$sourceId")
     }
 
-    private fun pushState(component: Component) {
-        val wasEmpty = history.isEmpty()
-        if (current == history.lastIndex) {
-            history.add(component)
-            current++
-        } else {
-            current++
-            history[current] = component
+    private fun componentFromRoute(url: String): Component {
+        val parts = parseUrlParams(url)
+        return when {
+            parts.size == 2 && parts[0] == "deck" -> DeckOverview(DeckOverviewModel(flashcardsService, wanikaniService, UUID(parts[1])))
+            parts.size == 3 && parts[0] == "deck" && parts[2] == "lesson" -> LessonScreen(LessonModel(flashcardsService, wanikaniService, UUID(parts[1])))
+            parts.size == 3 && parts[0] == "deck" && parts[2] == "review" -> ReviewScreen(ReviewModel(flashcardsService, wanikaniService, UUID(parts[1])))
+            parts.size == 1 && parts[0] == "reviewSummary" -> ReviewSummary()
+            parts.size == 2 && parts[0] == "source" && parts[1] == "create" -> SourceCreation(flashcardsService, wanikaniService)
+            parts.size == 2 && parts[0] == "source" -> SourceEditor(flashcardsService, wanikaniService, UUID(parts[1]))
+            else -> Dashboard(DashboardModel(flashcardsService, wanikaniService))
         }
-        if (!wasEmpty) {
-            window.history.pushState(current, "")
-        } else {
-            window.history.pushState(null, "")
-        }
+    }
+
+    private fun parseUrlParams(fragment: String): List<String> {
+        return fragment
+            .trimStart('#', '/')
+            .split('/')
+            .filter { it.isNotEmpty() }
+            .map { decodeURIComponent(it) }
+    }
+
+    private fun pushState(url: String) {
+        window.history.pushState(null, "", url)
+        current = componentFromRoute(url)
         render()
     }
 
     override fun render() {
-        markup().component(if (history.isEmpty()) emptyComponent else history[current])
+        markup().component(current)
     }
 }
+
+external fun decodeURIComponent(s: String): String

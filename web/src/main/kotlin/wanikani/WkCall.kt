@@ -64,11 +64,6 @@ class HttpWkCall(private val apiKey: String) {
 
         val resp = request("https://api.wanikani.com/v2/reviews", method = "POST", body = body)
         return json.decodeFromString(WkObject.serializer(Review.serializer()), resp)
-
-        /*console.warn("Would make request 'POST https://api.wanikani.com/v2/reviews' with body '$body'")
-        val assign = request("https://api.wanikani.com/v2/assignments/$assignmentId")
-            .let { json.decodeFromString(WkObject.serializer(Assignment.serializer()), it) }
-        return WkObject(1337, "review", Review(1337, 0, 0), ResourcesUpdated(assignment = assign))*/
     }
 
     suspend fun fetchStudyMaterials(): List<WkObject<StudyMaterial>> {

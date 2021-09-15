@@ -23,6 +23,4 @@
   * Change screen transitions to not blink (no loading text until 500ms have passed)
   * Allow reordering sources and decks on mobile (use touch api instead of dnd)
 * Bugs
-  * History: Reloading the page doesn't clear history, so need to handle or prevent going 
-    "back" from first page
   * Drag and drop doesn't work on chrome

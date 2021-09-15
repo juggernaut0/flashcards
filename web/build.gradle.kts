@@ -8,7 +8,7 @@ dependencies {
     implementation(kotlin("stdlib-js"))
 
     implementation("com.github.juggernaut0.kui:kui:0.12.0")
-    implementation("dev.twarner.auth:auth-ui:6")
+    implementation("dev.twarner.auth:auth-ui:7")
 
     implementation(npm("idb-keyval", "5.0.6"))
 

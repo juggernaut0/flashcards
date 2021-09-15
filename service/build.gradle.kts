@@ -27,7 +27,7 @@ dependencies {
     implementation("com.google.dagger:dagger:$daggerVersion")
     kapt("com.google.dagger:dagger-compiler:$daggerVersion")
 
-    implementation("ch.qos.logback:logback-classic:1.2.5")
+    implementation("ch.qos.logback:logback-classic:1.2.6")
 
     jooqGenerator("org.postgresql:postgresql:42.2.23")
     implementation("io.r2dbc:r2dbc-postgresql:0.8.8.RELEASE")

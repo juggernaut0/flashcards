@@ -14,7 +14,7 @@ import multiplatform.UUID
 import multiplatform.UUIDSerializer
 import multiplatform.graphql.GraphQLArgument
 import multiplatform.graphql.GraphQLVariable
-import kotlin.time.Duration
+import kotlin.time.Duration.Companion.days
 import kotlin.time.ExperimentalTime
 
 class DeckOverviewModel(
@@ -44,7 +44,7 @@ class DeckOverviewModel(
         }
         val reviewForecast = mutableMapOf<Instant, Int>()
         val now = Clock.System.now()
-        val oneWeek = now + Duration.days(7)
+        val oneWeek = now + 7.days
         for (source in added) {
             val forecast = when (source) {
                 is DeckOverviewQuery.CardSource.CustomCardSource -> source.reviewForecast.associate { it.time to it.count }

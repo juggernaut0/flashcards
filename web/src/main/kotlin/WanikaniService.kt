@@ -12,7 +12,7 @@ import multiplatform.UUID
 import org.w3c.dom.get
 import org.w3c.dom.set
 import wanikani.*
-import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.ExperimentalTime
 
 class WanikaniService {
@@ -63,7 +63,7 @@ class WanikaniAccount private constructor(
         if (error || wkCall == null) return
         val lastUpdated = lastUpdated
         val now = Clock.System.now()
-        if (!force && lastUpdated != null && now - lastUpdated < Duration.minutes(30)) return
+        if (!force && lastUpdated != null && now - lastUpdated < 30.minutes) return
         this.lastUpdated = now
         try {
             user = wkCall.fetchUser()

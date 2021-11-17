@@ -1,10 +1,10 @@
 plugins {
-    kotlin("jvm") version "1.5.30" apply false
-    kotlin("plugin.serialization") version "1.5.30" apply false
+    kotlin("jvm") version "1.6.0" apply false
+    kotlin("plugin.serialization") version "1.6.0" apply false
 }
 
 subprojects {
-    version = "29"
+    version = "30"
 
     repositories {
         mavenLocal()

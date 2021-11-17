@@ -24,7 +24,7 @@ kotlin {
             dependencies {
                 api("com.github.juggernaut0:multiplatform-utils:$multiplatformUtilsVersion")
                 api("com.github.juggernaut0:multiplatform-utils-graphql:$multiplatformUtilsVersion")
-                api("org.jetbrains.kotlinx:kotlinx-datetime:0.2.1")
+                api("org.jetbrains.kotlinx:kotlinx-datetime:0.3.1")
             }
         }
 

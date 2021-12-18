@@ -18,16 +18,16 @@ dependencies {
 
     implementation(kotlin("stdlib-jdk8"))
 
-    val ktorVersion = "1.6.5"
+    val ktorVersion = "1.6.7"
     implementation("io.ktor:ktor-server-core:$ktorVersion")
     implementation("io.ktor:ktor-server-jetty:$ktorVersion")
     implementation("io.ktor:ktor-client-apache:$ktorVersion")
 
-    val daggerVersion = "2.40.1"
+    val daggerVersion = "2.40.5"
     implementation("com.google.dagger:dagger:$daggerVersion")
     kapt("com.google.dagger:dagger-compiler:$daggerVersion")
 
-    implementation("ch.qos.logback:logback-classic:1.2.7")
+    implementation("ch.qos.logback:logback-classic:1.2.9")
 
     jooqGenerator("org.postgresql:postgresql:42.3.1")
     implementation("io.r2dbc:r2dbc-postgresql:0.8.10.RELEASE")

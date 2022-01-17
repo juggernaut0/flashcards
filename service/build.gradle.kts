@@ -8,7 +8,7 @@ plugins {
     application
     id("nu.studer.jooq").version("5.2.1")
     kotlin("kapt")
-    id("com.bmuschko.docker-remote-api") version "7.1.0"
+    id("com.bmuschko.docker-remote-api") version "7.2.0"
     kotlin("plugin.serialization")
 }
 
@@ -27,12 +27,12 @@ dependencies {
     implementation("com.google.dagger:dagger:$daggerVersion")
     kapt("com.google.dagger:dagger-compiler:$daggerVersion")
 
-    implementation("ch.qos.logback:logback-classic:1.2.9")
+    implementation("ch.qos.logback:logback-classic:1.2.10")
 
     jooqGenerator("org.postgresql:postgresql:42.3.1")
-    implementation("io.r2dbc:r2dbc-postgresql:0.8.10.RELEASE")
-    implementation("io.r2dbc:r2dbc-pool:0.8.7.RELEASE")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.5.2")
+    implementation("io.r2dbc:r2dbc-postgresql:0.8.11.RELEASE")
+    implementation("io.r2dbc:r2dbc-pool:0.9.0.RELEASE")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.6.0")
 
     implementation("io.github.config4k:config4k:0.4.2")
 

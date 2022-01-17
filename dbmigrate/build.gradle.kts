@@ -4,14 +4,14 @@ import com.bmuschko.gradle.docker.tasks.image.Dockerfile
 plugins {
     kotlin("jvm")
     application
-    id("com.bmuschko.docker-remote-api") version "7.1.0"
+    id("com.bmuschko.docker-remote-api") version "7.2.0"
 }
 
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
 
     implementation("org.postgresql:postgresql:42.3.1")
-    implementation("org.flywaydb:flyway-core:8.2.2")
+    implementation("org.flywaydb:flyway-core:8.4.1")
 }
 
 application {

@@ -38,13 +38,13 @@ class FuzzyMatchTest {
 
     @Test
     fun rejectBlockList() {
-        val result = fuzzyMatch("hell", "hello", listOf("hell"), emptyList())
+        val result = fuzzyMatch("hell", "hello", listOf("Hell"), emptyList())
         assertEquals(FuzzyMatchResult.REJECT, result)
     }
 
     @Test
     fun closeCloseList() {
-        val result = fuzzyMatch("konnichiwa", "hello", emptyList(), listOf("konnichiwa"))
+        val result = fuzzyMatch("konnichiwa", "hello", emptyList(), listOf("Konnichiwa"))
         assertEquals(FuzzyMatchResult.CLOSE, result)
     }
 }

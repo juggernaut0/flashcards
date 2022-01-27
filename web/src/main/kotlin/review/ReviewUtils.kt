@@ -5,12 +5,12 @@ import kana.kanaToRomaji
 
 @Suppress("NAME_SHADOWING")
 fun fuzzyMatch(given: String, expected: String, blockList: List<String>, closeList: List<String>): FuzzyMatchResult {
-    val given = given.trim().lowercase().replace(removeFromAnswerRegex, "")
-    val expected = expected.trim().lowercase().replace(removeFromAnswerRegex, "")
+    val given = given.sanitize()
+    val expected = expected.sanitize()
 
     if (given == expected) return FuzzyMatchResult.ALLOW
     if (given.isBlank()) return FuzzyMatchResult.CLOSE
-    if (given in blockList) return FuzzyMatchResult.REJECT
+    if (blockList.any { given == it.sanitize() }) return FuzzyMatchResult.REJECT
 
     val isKana = expected.isKana()
     if (!isKana && given.length <=2 && expected.length <= 2) return FuzzyMatchResult.REJECT
@@ -28,10 +28,12 @@ fun fuzzyMatch(given: String, expected: String, blockList: List<String>, closeLi
         if (lev <= 2 && expected.length > 2 && given.length > 2) return FuzzyMatchResult.ALLOW_WITH_TYPO
     }
 
-    if (given in closeList) return FuzzyMatchResult.CLOSE
+    if (closeList.any { given == it.sanitize() }) return FuzzyMatchResult.CLOSE
 
     return FuzzyMatchResult.REJECT
 }
+
+private fun String.sanitize(): String = trim().lowercase().replace(removeFromAnswerRegex, "")
 
 private val removeFromAnswerRegex = Regex("[,.\\-']")
 

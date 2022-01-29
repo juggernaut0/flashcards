@@ -1,6 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.Kotlin2JsCompile
 
 plugins {
+    id("kotlin-conventions")
     kotlin("multiplatform")
     kotlin("plugin.serialization")
 }

@@ -3,9 +3,11 @@ plugins {
 }
 
 repositories {
-    gradlePluginPortal() // so that external plugins can be resolved in dependencies section
+    gradlePluginPortal()
 }
 
 dependencies {
-    implementation("de.undercouch:gradle-download-task:4.1.2")
+    implementation("org.jetbrains.kotlin:kotlin-gradle-plugin:1.6.10")
+    implementation("org.jetbrains.kotlin:kotlin-serialization:1.6.10")
+    implementation("de.undercouch:gradle-download-task:5.0.0")
 }

@@ -3,6 +3,7 @@ import com.bmuschko.gradle.docker.tasks.image.Dockerfile
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
+    id("kotlin-conventions")
     kotlin("jvm")
     java
     application
@@ -94,7 +95,7 @@ jooq {
 
 tasks {
     withType<KotlinCompile> {
-        kotlinOptions.jvmTarget = "11"
+        kotlinOptions.jvmTarget = "17"
     }
 
     val copyWeb by registering(Copy::class) {
@@ -133,7 +134,7 @@ tasks {
     val dockerfile by registering(Dockerfile::class) {
         dependsOn(copyDist)
 
-        from("openjdk:11-jre-slim")
+        from("openjdk:17-slim")
         addFile(distTar.flatMap { it.archiveFileName }.map { Dockerfile.File(it, "/app/") })
         defaultCommand(distTar.flatMap { it.archiveFile }.map { it.asFile.nameWithoutExtension }.map { listOf("/app/$it/bin/${project.name}") })
     }

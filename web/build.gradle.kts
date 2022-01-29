@@ -1,4 +1,5 @@
 plugins {
+    id("kotlin-conventions")
     kotlin("js")
     kotlin("plugin.serialization")
 }
@@ -55,6 +56,7 @@ tasks {
     val runSass by registering(SassTask::class) {
         dependsOn(assembleSassSrc)
         inputDir.set(layout.dir(assembleSassSrc.map { it.destinationDir }))
+        version.set("1.49.0")
     }
 
     assemble {

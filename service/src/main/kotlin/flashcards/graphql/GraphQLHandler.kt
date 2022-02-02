@@ -9,7 +9,6 @@ import graphql.schema.GraphQLSchema
 import graphql.schema.idl.SchemaPrinter
 import io.ktor.auth.*
 import io.ktor.routing.*
-import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.toKotlinInstant
@@ -33,7 +32,6 @@ fun Route.registerRoutes(handler: GraphQLHandler) {
     }
 }
 
-@OptIn(FlowPreview::class)
 class GraphQLHandler @Inject constructor(
     private val accountService: AccountService,
     private val deckDao: DeckDao,

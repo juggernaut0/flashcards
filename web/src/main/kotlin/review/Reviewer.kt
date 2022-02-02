@@ -9,10 +9,7 @@ import kotlinx.browser.document
 import kotlinx.browser.window
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
-import kui.Component
-import kui.KeyboardEventArgs
-import kui.Props
-import kui.classes
+import kui.*
 import multiplatform.FetchException
 import multiplatform.UUID
 import multiplatform.UUIDSerializer
@@ -32,24 +29,31 @@ class Reviewer(
 
     private val totalItems = items.size
     private val cards: Iterator<ReviewCard> = items.makeClumps()
-    private var currentItem: ReviewCard = cards.next()
+    private var currentItem: ReviewCard
     private var input: String = ""
     private var errored = false
     private var inputState = InputState.WAITING
     private var notesShown = false
     private var reviewMistakeText = ""
     private val summary = mutableListOf<ReviewSummaryItem>()
+    private var wrappingUp by renderOnSet(false)
 
-    enum class InputState { WAITING, CORRECT, INCORRECT }
+    init {
+        currentItem = cards.next()
+    }
+
+    private enum class InputState { WAITING, CORRECT, INCORRECT }
 
     private fun List<ReviewItem>.makeClumps(): Iterator<ReviewCard> {
         val clumpSize = 10 // how many concurrent unfinished items are being reviewed
         val reviewItems = ArrayDeque(shuffled())
         return iterator {
             val workingGroups = mutableListOf<ReviewGroup>()
-            while (reviewItems.isNotEmpty() || workingGroups.isNotEmpty()) {
-                while (workingGroups.size < clumpSize && reviewItems.isNotEmpty()) {
-                    workingGroups.add(ReviewGroup(reviewItems.removeFirst()))
+            while ((!wrappingUp && reviewItems.isNotEmpty()) || workingGroups.isNotEmpty()) {
+                if (!wrappingUp) {
+                    while (workingGroups.size < clumpSize && reviewItems.isNotEmpty()) {
+                        workingGroups.add(ReviewGroup(reviewItems.removeFirst()))
+                    }
                 }
 
                 val item = workingGroups.random()
@@ -231,20 +235,26 @@ class Reviewer(
                 }
             }
             div(classes("review-button-container")) {
-                button(
-                    Props(
+                button(Props(
+                    classes = listOf("review-button"),
+                    click = { wrappingUp = !wrappingUp },
+                )) {
+                    if (wrappingUp) {
+                        +"Wrapping..."
+                    } else {
+                        +"Wrap Up"
+                    }
+                }
+                button(Props(
                     classes = listOf("review-button", "review-oops"),
                     click = { oops(item) },
                     disabled = inputState == InputState.WAITING
-                )
-                ) { +"Oops" }
-                button(
-                    Props(
+                )) { +"Oops" }
+                button(Props(
                     classes = listOf("review-button", "review-notes"),
                     click = { notesShown = !notesShown; render() },
                     disabled = inputState == InputState.WAITING
-                )
-                ) { +"Notes" }
+                )) { +"Notes" }
                 button(Props(
                     classes = listOf("review-button", "review-next"),
                     click = { checkReview(item) }

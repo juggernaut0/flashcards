@@ -17,7 +17,6 @@
 * Features
   * Allow disabling lessons for certain sources per deck
   * Improve WK data load performance
-  * Review screen: Wrap up
   * QoL: Add synonyms from review screen details foldout
   * Implement source and deck deletion
   * Change screen transitions to not blink (no loading text until 500ms have passed)

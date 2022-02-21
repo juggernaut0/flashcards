@@ -24,13 +24,13 @@ dependencies {
     implementation("io.ktor:ktor-server-jetty:$ktorVersion")
     implementation("io.ktor:ktor-client-apache:$ktorVersion")
 
-    val daggerVersion = "2.40.5"
+    val daggerVersion = "2.41"
     implementation("com.google.dagger:dagger:$daggerVersion")
     kapt("com.google.dagger:dagger-compiler:$daggerVersion")
 
     implementation("ch.qos.logback:logback-classic:1.2.10")
 
-    jooqGenerator("org.postgresql:postgresql:42.3.2")
+    jooqGenerator("org.postgresql:postgresql:42.3.3")
     implementation("io.r2dbc:r2dbc-postgresql:0.8.11.RELEASE")
     implementation("io.r2dbc:r2dbc-pool:0.9.0.RELEASE")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.6.0")

@@ -9,7 +9,7 @@ plugins {
     application
     id("nu.studer.jooq").version("5.2.1")
     kotlin("kapt")
-    id("com.bmuschko.docker-remote-api") version "7.2.0"
+    id("com.bmuschko.docker-remote-api") version "7.3.0"
     kotlin("plugin.serialization")
 }
 
@@ -19,7 +19,7 @@ dependencies {
 
     implementation(kotlin("stdlib-jdk8"))
 
-    val ktorVersion = "1.6.7"
+    val ktorVersion = "1.6.8"
     implementation("io.ktor:ktor-server-core:$ktorVersion")
     implementation("io.ktor:ktor-server-jetty:$ktorVersion")
     implementation("io.ktor:ktor-client-apache:$ktorVersion")
@@ -28,7 +28,7 @@ dependencies {
     implementation("com.google.dagger:dagger:$daggerVersion")
     kapt("com.google.dagger:dagger-compiler:$daggerVersion")
 
-    implementation("ch.qos.logback:logback-classic:1.2.10")
+    implementation("ch.qos.logback:logback-classic:1.2.11")
 
     jooqGenerator("org.postgresql:postgresql:42.3.3")
     implementation("io.r2dbc:r2dbc-postgresql:0.8.11.RELEASE")

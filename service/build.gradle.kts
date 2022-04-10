@@ -31,9 +31,9 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:1.2.11")
 
     jooqGenerator("org.postgresql:postgresql:42.3.3")
-    implementation("io.r2dbc:r2dbc-postgresql:0.8.11.RELEASE")
+    implementation("io.r2dbc:r2dbc-postgresql:0.8.12.RELEASE")
     implementation("io.r2dbc:r2dbc-pool:0.9.0.RELEASE")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.6.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.6.1")
 
     implementation("io.github.config4k:config4k:0.4.2")
 

@@ -5,8 +5,8 @@ import flashcards.api.v1.*
 import flashcards.db.CardSourceDao
 import flashcards.db.Database
 import flashcards.db.DeckDao
-import io.ktor.auth.*
-import io.ktor.routing.*
+import io.ktor.server.auth.*
+import io.ktor.server.routing.*
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import multiplatform.ktor.BadRequestException

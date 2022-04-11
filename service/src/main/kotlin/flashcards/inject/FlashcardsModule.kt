@@ -6,7 +6,7 @@ import flashcards.AppConfig
 import flashcards.FlashcardsConfig
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.apache.Apache
-import io.ktor.client.features.defaultRequest
+import io.ktor.client.plugins.defaultRequest
 import io.r2dbc.spi.ConnectionFactories
 import io.r2dbc.spi.ConnectionFactory
 import io.r2dbc.spi.ConnectionFactoryOptions

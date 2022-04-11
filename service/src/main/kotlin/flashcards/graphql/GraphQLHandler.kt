@@ -7,8 +7,8 @@ import flashcards.api.v1.*
 import flashcards.db.*
 import graphql.schema.GraphQLSchema
 import graphql.schema.idl.SchemaPrinter
-import io.ktor.auth.*
-import io.ktor.routing.*
+import io.ktor.server.auth.*
+import io.ktor.server.routing.*
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.toKotlinInstant

@@ -19,9 +19,11 @@ dependencies {
 
     implementation(kotlin("stdlib-jdk8"))
 
-    val ktorVersion = "1.6.8"
+    val ktorVersion = "2.0.0"
     implementation("io.ktor:ktor-server-core:$ktorVersion")
     implementation("io.ktor:ktor-server-jetty:$ktorVersion")
+    implementation("io.ktor:ktor-server-call-logging:$ktorVersion")
+    implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
     implementation("io.ktor:ktor-client-apache:$ktorVersion")
 
     val daggerVersion = "2.41"
@@ -37,7 +39,7 @@ dependencies {
 
     implementation("io.github.config4k:config4k:0.4.2")
 
-    implementation("dev.twarner.auth:auth-common:6")
+    implementation("dev.twarner.auth:auth-common:9")
 
     testImplementation(kotlin("test-junit"))
 }

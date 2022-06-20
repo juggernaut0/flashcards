@@ -1,5 +1,6 @@
 plugins {
     `kotlin-dsl`
+    kotlin("jvm") version "1.7.0" // TODO remove when gradle updates built in kotlin
 }
 
 repositories {

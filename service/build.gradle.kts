@@ -9,7 +9,7 @@ plugins {
     application
     id("nu.studer.jooq").version("5.2.1")
     kotlin("kapt")
-    id("com.bmuschko.docker-remote-api") version "7.4.0"
+    id("com.bmuschko.docker-remote-api") version "8.0.0"
     kotlin("plugin.serialization")
 }
 

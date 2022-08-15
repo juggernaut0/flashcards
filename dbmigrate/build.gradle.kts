@@ -7,8 +7,8 @@ plugins {
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
 
-    implementation("org.postgresql:postgresql:42.4.0")
-    implementation("org.flywaydb:flyway-core:8.5.13")
+    implementation("org.postgresql:postgresql:42.4.1")
+    implementation("org.flywaydb:flyway-core:9.1.3")
 }
 
 application {

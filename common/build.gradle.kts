@@ -24,7 +24,7 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 api("com.github.juggernaut0:multiplatform-utils-graphql:$multiplatformUtilsVersion")
-                api("org.jetbrains.kotlinx:kotlinx-datetime:0.3.3")
+                api("org.jetbrains.kotlinx:kotlinx-datetime:0.4.0")
             }
         }
 

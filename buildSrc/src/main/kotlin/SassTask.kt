@@ -31,7 +31,7 @@ abstract class SassTask : DefaultTask() {
         download.src("https://github.com/sass/dart-sass/releases/download/$version/dart-sass-$version-linux-x64.tar.gz")
         download.dest(downloadDest)
         download.overwrite(false)
-        download.execute()
+        download.execute().get()
 
         project.copy {
             from(project.tarTree(downloadDest))

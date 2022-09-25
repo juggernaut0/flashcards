@@ -16,10 +16,13 @@ dependencies {
     testImplementation(kotlin("test-js"))
 }
 
+val firefoxVersion = "105.0.1"
+
 kotlin {
     js {
         browser {
             testTask {
+                environment("FIREFOX_BIN", "${gradle.gradleUserHomeDir}/firefox/$firefoxVersion/firefox/firefox")
                 useKarma {
                     useFirefoxHeadless()
                 }
@@ -61,5 +64,13 @@ tasks {
 
     assemble {
         dependsOn(runSass)
+    }
+
+    val downloadFirefox by registering(DownloadFirefoxTask::class) {
+        version.set(firefoxVersion)
+    }
+
+    named("browserTest") {
+        dependsOn(downloadFirefox)
     }
 }

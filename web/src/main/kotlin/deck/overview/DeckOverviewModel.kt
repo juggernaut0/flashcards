@@ -15,14 +15,12 @@ import multiplatform.UUIDSerializer
 import multiplatform.graphql.GraphQLArgument
 import multiplatform.graphql.GraphQLVariable
 import kotlin.time.Duration.Companion.days
-import kotlin.time.ExperimentalTime
 
 class DeckOverviewModel(
     private val flashcardsService: FlashcardsService,
     private val wanikaniService: WanikaniService,
     val deckId: UUID,
 ) {
-    @OptIn(ExperimentalTime::class)
     suspend fun getData(): DeckOverviewData {
         val query = flashcardsService.query(DeckOverviewQuery.serializer(), "id" to deckId)
         val unadded = query.sources.toMutableList()
@@ -36,12 +34,18 @@ class DeckOverviewModel(
                 is DeckOverviewQuery.CardSource.WanikaniCardSource -> wanikaniService.forSource(it.id).getLessons().size
             }
         }
-        val reviews = added.sumOf {
-            when (it) {
-                is DeckOverviewQuery.CardSource.CustomCardSource -> it.reviews
-                is DeckOverviewQuery.CardSource.WanikaniCardSource -> wanikaniService.forSource(it.id).getReviews().size
+
+        val reviewItems = added.flatMap { cs ->
+            when (cs) {
+                is DeckOverviewQuery.CardSource.CustomCardSource -> cs.reviewItems.map { it.cardGroup.srsStage }
+                is DeckOverviewQuery.CardSource.WanikaniCardSource -> wanikaniService.forSource(cs.id).getReviews().map { it.data.srsStage }
             }
         }
+        val reviews = reviewItems.size
+        val reviewsPerStage = reviewItems
+            .groupingBy { it }
+            .eachCount()
+
         val reviewForecast = mutableMapOf<Instant, Int>()
         val now = Clock.System.now()
         val oneWeek = now + 7.days
@@ -65,6 +69,7 @@ class DeckOverviewModel(
             unaddedSources = unadded.map { SourceView(it.name, it.id) },
             lessons = lessons,
             reviews = reviews,
+            reviewsPerStage = reviewsPerStage,
             reviewForecast = forecastEntries,
         )
     }
@@ -110,6 +115,7 @@ class DeckOverviewData(
     val unaddedSources: List<SourceView>,
     val lessons: Int,
     val reviews: Int,
+    val reviewsPerStage: Map<Int, Int>, // srsStage to count
     val reviewForecast: List<ReviewForecastEntry>,
 )
 class SourceView(val name: String, val id: UUID) {
@@ -135,13 +141,19 @@ class DeckOverviewQuery(@GraphQLArgument("id", "\$id") val deck: Deck, val sourc
             override val name: String,
             override val id: UUID,
             val lessons: Int,
-            val reviews: Int,
+            val reviewItems: List<ReviewItem>,
             val reviewForecast: List<ReviewForecastItem>,
         ) : CardSource()
         @Serializable
         @SerialName("WanikaniCardSource")
         class WanikaniCardSource(override val name: String, override val id: UUID) : CardSource()
     }
+
+    @Serializable
+    data class ReviewItem(val cardGroup: CardGroup)
+
+    @Serializable
+    data class CardGroup(val srsStage: Int)
 
     @Serializable
     data class ReviewForecastItem(val time: Instant, val count: Int)

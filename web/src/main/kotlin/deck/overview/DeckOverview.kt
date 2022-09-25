@@ -73,6 +73,17 @@ class DeckOverview(private val model: DeckOverviewModel) : Component() {
                     disabled = deck.reviews == 0
                 )) { +if(deck.reviews == 0) "No reviews available" else "Start ${deck.reviews} reviews" }
 
+                if (deck.reviews > 0) {
+                    h4 { +"SRS Breakdown" }
+
+                    div(classes("row")) {
+                        +deck.reviewsPerStage
+                            .entries
+                            .sortedBy { it.key }
+                            .joinToString(separator = ", ") { (stage, count) -> "Stage $stage: $count" }
+                    }
+                }
+
                 h3 { +"Review Forecast" }
 
                 var lastDate: LocalDate? = null

@@ -1,5 +1,6 @@
 import asynclite.async
 import auth.AuthPanel
+import auth.AuthorizedClient
 import auth.api.v1.LookupParams
 import components.FlashcardsApp
 import kotlinx.browser.document

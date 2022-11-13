@@ -24,7 +24,6 @@ class FlashcardsModule(private val config: FlashcardsConfig) {
                 url.host = config.auth.host
                 config.auth.port?.let { url.port = it }
             }
-
         }
     }
 

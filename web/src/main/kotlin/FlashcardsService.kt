@@ -1,3 +1,4 @@
+import auth.AuthorizedClient
 import flashcards.api.v1.*
 import kotlinx.serialization.KSerializer
 import multiplatform.UUID
@@ -45,28 +46,5 @@ class FlashcardsService {
 
     suspend fun resetReview(sourceId: UUID, iid: Int) {
         client.callApi(resetReview, ReviewParam(sourceId, iid))
-    }
-}
-
-fun Iterable<Pair<String, String>>.asHeaders(): Headers = object : Headers, Iterable<Pair<String, String>> by this {}
-
-class AuthorizedClient(private val delegate: ApiClient): ApiClient {
-    override suspend fun <P, R> callApi(apiRoute: ApiRoute<P, R>, params: P, headers: Headers?): R {
-        return delegate.callApi(apiRoute, params, headers.addAuthHeader())
-    }
-
-    override suspend fun <P, T, R> callApi(
-        apiRoute: ApiRouteWithBody<P, T, R>,
-        params: P,
-        body: T,
-        headers: Headers?
-    ): R {
-        return delegate.callApi(apiRoute, params, body, headers.addAuthHeader())
-    }
-
-    private fun Headers?.addAuthHeader(): Headers {
-        return (this?.toMutableList() ?: mutableListOf())
-            .also { it.add("Authorization" to "Bearer ${auth.getToken()}") }
-            .asHeaders()
     }
 }

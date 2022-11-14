@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.Kotlin2JsCompile
 
 plugins {
-    id("kotlin-conventions")
+    id("dev.twarner.common")
     kotlin("multiplatform")
     kotlin("plugin.serialization")
 }

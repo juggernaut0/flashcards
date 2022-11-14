@@ -1,5 +1,5 @@
 plugins {
-    id("kotlin-conventions")
+    id("dev.twarner.common")
     kotlin("jvm")
     application
 }

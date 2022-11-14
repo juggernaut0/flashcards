@@ -1,5 +1,8 @@
+import dev.twarner.gradle.DownloadFirefoxTask
+import dev.twarner.gradle.SassTask
+
 plugins {
-    id("kotlin-conventions")
+    id("dev.twarner.common")
     kotlin("js")
     kotlin("plugin.serialization")
 }

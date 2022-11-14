@@ -1,9 +1,10 @@
 import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
 import com.bmuschko.gradle.docker.tasks.image.Dockerfile
+import dev.twarner.gradle.SassTask
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    id("kotlin-conventions")
+    id("dev.twarner.common")
     kotlin("jvm")
     java
     application

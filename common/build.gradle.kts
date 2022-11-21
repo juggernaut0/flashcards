@@ -19,18 +19,16 @@ kotlin {
             }
         }
 
-        val multiplatformUtilsVersion = "0.8.0-graphql-SNAPSHOT"
-
         val commonMain by getting {
             dependencies {
-                api("com.github.juggernaut0:multiplatform-utils-graphql:$multiplatformUtilsVersion")
+                api("com.github.juggernaut0:multiplatform-utils-graphql:${libs.versions.multiplatform.utils.get()}")
                 api("org.jetbrains.kotlinx:kotlinx-datetime:0.4.0")
             }
         }
 
         val jvmMain by getting {
             dependencies {
-                api("com.github.juggernaut0:multiplatform-utils-ktor-jvm:$multiplatformUtilsVersion")
+                api(libs.multiplatform.utils.ktor)
             }
         }
     }

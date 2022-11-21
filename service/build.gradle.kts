@@ -8,9 +8,9 @@ plugins {
     kotlin("jvm")
     java
     application
-    id("nu.studer.jooq") version "8.0"
+    alias(libs.plugins.jooq)
     kotlin("kapt")
-    id("com.bmuschko.docker-remote-api") version "9.0.0"
+    alias(libs.plugins.docker.api)
     kotlin("plugin.serialization")
 }
 
@@ -20,27 +20,22 @@ dependencies {
 
     implementation(kotlin("stdlib-jdk8"))
 
-    val ktorVersion = "2.1.3"
-    implementation("io.ktor:ktor-server-core:$ktorVersion")
-    implementation("io.ktor:ktor-server-jetty:$ktorVersion")
-    implementation("io.ktor:ktor-server-call-logging:$ktorVersion")
-    implementation("io.ktor:ktor-server-status-pages:$ktorVersion")
-    implementation("io.ktor:ktor-client-apache:$ktorVersion")
+    implementation(platform(libs.ktor.bom))
+    implementation(libs.bundles.ktor.server.jetty)
+    implementation(libs.ktor.client.apache)
 
-    val daggerVersion = "2.44.1"
-    implementation("com.google.dagger:dagger:$daggerVersion")
-    kapt("com.google.dagger:dagger-compiler:$daggerVersion")
+    implementation(libs.dagger)
+    kapt(libs.dagger.compiler)
 
-    implementation("ch.qos.logback:logback-classic:1.4.4")
+    implementation(libs.logback)
 
-    jooqGenerator("org.postgresql:postgresql:42.5.0")
-    implementation("io.r2dbc:r2dbc-postgresql:0.8.13.RELEASE")
-    implementation("io.r2dbc:r2dbc-pool:1.0.0.RELEASE")
+    jooqGenerator(libs.postgresql)
+    implementation(libs.bundles.r2dbc.postgresql)
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor:1.6.4")
 
-    implementation("io.github.config4k:config4k:0.5.0")
+    implementation(libs.config4k)
 
-    implementation("dev.twarner.auth:auth-common:16")
+    implementation(libs.twarner.auth.common)
 
     testImplementation(kotlin("test-junit"))
 }

@@ -11,8 +11,8 @@ dependencies {
     implementation(project(":common"))
     implementation(kotlin("stdlib-js"))
 
-    implementation("com.github.juggernaut0.kui:kui:0.14.1")
-    implementation("dev.twarner.auth:auth-ui:16")
+    implementation(libs.kui)
+    implementation(libs.twarner.auth.ui)
 
     implementation(npm("idb-keyval", "5.0.6"))
 

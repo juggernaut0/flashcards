@@ -19,7 +19,7 @@ dependencies {
     testImplementation(kotlin("test-js"))
 }
 
-val firefoxVersion = "105.0.1"
+val firefoxVersion = "108.0.2"
 
 kotlin {
     js {

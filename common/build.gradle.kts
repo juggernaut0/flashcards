@@ -8,7 +8,7 @@ plugins {
 
 kotlin {
     jvm()
-    js {
+    js(LEGACY) {
         browser()
     }
 
@@ -28,7 +28,7 @@ kotlin {
 
         val jvmMain by getting {
             dependencies {
-                api(libs.multiplatform.utils.ktor)
+                api(libs.multiplatformUtils.ktor)
             }
         }
     }

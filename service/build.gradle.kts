@@ -10,8 +10,8 @@ plugins {
     application
     alias(libs.plugins.jooq)
     kotlin("kapt")
-    alias(libs.plugins.docker.api)
     kotlin("plugin.serialization")
+    id("dev.twarner.docker")
 }
 
 dependencies {
@@ -91,10 +91,6 @@ jooq {
 }
 
 tasks {
-    withType<KotlinCompile> {
-        kotlinOptions.jvmTarget = "17"
-    }
-
     val copyWeb by registering(Copy::class) {
         if (version.toString().endsWith("SNAPSHOT")) {
             dependsOn(":web:browserDevelopmentWebpack")
@@ -120,29 +116,5 @@ tasks {
 
     run.invoke {
         systemProperty("config.file", "local.conf")
-    }
-
-    val copyDist by registering(Copy::class) {
-        dependsOn(distTar)
-        from(distTar.flatMap { it.archiveFile })
-        into("$buildDir/docker")
-    }
-
-    val dockerfile by registering(Dockerfile::class) {
-        dependsOn(copyDist)
-
-        from("openjdk:17-slim")
-        addFile(distTar.flatMap { it.archiveFileName }.map { Dockerfile.File(it, "/app/") })
-        defaultCommand(distTar.flatMap { it.archiveFile }.map { it.asFile.nameWithoutExtension }.map { listOf("/app/$it/bin/${project.name}") })
-    }
-
-    val dockerBuild by registering(DockerBuildImage::class) {
-        dependsOn(dockerfile)
-
-        if (version.toString().endsWith("SNAPSHOT")) {
-            images.add("${rootProject.name}:SNAPSHOT")
-        } else {
-            images.add("juggernaut0/${rootProject.name}:$version")
-        }
     }
 }

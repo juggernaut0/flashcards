@@ -7,9 +7,9 @@ pluginManagement {
     }
 
     plugins {
-        id("dev.twarner.common") version "0.3.3"
+        id("dev.twarner.common") version "0.3.4"
 
-        val kotlinVersion = "1.8.0"
+        val kotlinVersion = "1.8.10"
         kotlin("js") version kotlinVersion
         kotlin("jvm") version kotlinVersion
         kotlin("kapt") version kotlinVersion
@@ -26,7 +26,7 @@ dependencyResolutionManagement {
 
     versionCatalogs {
         create("libs") {
-            from("dev.twarner:catalog:0.3.3")
+            from("dev.twarner:catalog:0.3.4")
             version("multiplatform-utils", "0.8.0-graphql-SNAPSHOT")
         }
     }

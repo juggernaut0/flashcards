@@ -95,7 +95,10 @@ class WanikaniAccount private constructor(
 
     suspend fun getLessons(): List<WkObject<Assignment>> {
         update()
-        return assignments.values.filter { it.data.srsStage == 0 }.sortedWith(assignmentComparator)
+        return assignments.values
+            .filter { it.data.srsStage == 0 }
+            .filter { it.data.subjectId in subjects } // make sure we know about its subject
+            .sortedWith(assignmentComparator)
     }
 
     suspend fun getReviews(): List<WkObject<Assignment>> {

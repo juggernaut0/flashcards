@@ -19,19 +19,22 @@ class HttpWkCall(private val apiKey: String) {
     }
 
     suspend fun fetchSubjects(): List<WkObject<Subject>> {
-        return getAll("https://api.wanikani.com/v2/subjects", JsonObject.serializer()).map { convertSubject(it) }
+        return getAll("https://api.wanikani.com/v2/subjects", JsonObject.serializer()).mapNotNull { convertSubject(it) }
     }
 
     suspend fun fetchNewSubjects(lastUpdated: Instant): List<WkObject<Subject>> {
-        return getAll("https://api.wanikani.com/v2/subjects?updated_after=$lastUpdated", JsonObject.serializer()).map { convertSubject(it) }
+        return getAll("https://api.wanikani.com/v2/subjects?updated_after=$lastUpdated", JsonObject.serializer()).mapNotNull { convertSubject(it) }
     }
 
-    private fun convertSubject(subject: WkObject<JsonObject>): WkObject<Subject> {
+    private fun convertSubject(subject: WkObject<JsonObject>): WkObject<Subject>? {
         val ser = when (subject.`object`) {
             "radical" -> RadicalSubject.serializer()
             "kanji" -> KanjiSubject.serializer()
             "vocabulary" -> VocabularySubject.serializer()
-            else -> error("unknown subject type ${subject.`object`}")
+            else -> {
+                console.error("unknown subject type ${subject.`object`}")
+                return null
+            }
         }
         return WkObject(subject.id, subject.`object`, json.decodeFromJsonElement(ser, subject.data))
     }

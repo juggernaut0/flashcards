@@ -79,6 +79,16 @@ class VocabularySubject(
 ) : Subject()
 
 @Serializable
+class KanaVocabularySubject(
+    val auxiliary_meanings: List<AuxiliaryMeaning> = emptyList(),
+    val characters: String,
+    override val level: Int,
+    val meanings: List<SubjectMeaning>,
+    val meaning_mnemonic: String,
+    val meaning_hint: String? = null,
+) : Subject()
+
+@Serializable
 class VocabReading(
     val reading: String,
     val primary: Boolean,

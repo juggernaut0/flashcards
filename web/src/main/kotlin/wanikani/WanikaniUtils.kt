@@ -97,6 +97,23 @@ fun toCardGroup(assignment: WkObject<Assignment>, subject: WkObject<Subject>, st
                 ),
             )
         }
+        is KanaVocabularySubject -> {
+            val front = data.characters
+            val (meaning, meaningSyn) = data.meanings.partition { it.primary }
+            val aux = data.auxiliary_meanings.groupBy({ it.type }, { it.meaning })
+            val meaningNotes = data.meaning_mnemonic + data.meaning_hint?.let { "\n\n$it" }.orEmpty()
+            listOf(
+                Reviewer.Card(
+                    front = front,
+                    back = meaning.first().meaning,
+                    prompt = "Vocab Meaning",
+                    synonyms = meaningSyn.map { it.meaning } + userSynonyms + aux["whitelist"].orEmpty(),
+                    blockList = aux["blacklist"],
+                    closeList = emptyList(),
+                    notes = meaningNotes,
+                ),
+            )
+        }
     }
     return Reviewer.CardGroup(cards, iid = assignment.id)
 }

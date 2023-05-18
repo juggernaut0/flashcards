@@ -31,6 +31,7 @@ class HttpWkCall(private val apiKey: String) {
             "radical" -> RadicalSubject.serializer()
             "kanji" -> KanjiSubject.serializer()
             "vocabulary" -> VocabularySubject.serializer()
+            "kana_vocabulary" -> KanaVocabularySubject.serializer()
             else -> {
                 console.error("unknown subject type ${subject.`object`}")
                 return null

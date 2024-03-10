@@ -7,7 +7,7 @@ pluginManagement {
     }
 
     plugins {
-        id("dev.twarner.common") version "0.3.4"
+        id("dev.twarner.common") version "1.0.4"
 
         val kotlinVersion = "1.8.10"
         kotlin("js") version kotlinVersion

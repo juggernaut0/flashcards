@@ -12,34 +12,31 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers
 import multiplatform.UUID
 import multiplatform.UUIDSerializer
-import multiplatform.graphql.GraphQLArgument
-import multiplatform.graphql.GraphQLVariable
+import multiplatform.graphql.GraphQLQuery
 import kotlin.time.Duration.Companion.days
-import kotlin.time.ExperimentalTime
 
 class DeckOverviewModel(
     private val flashcardsService: FlashcardsService,
     private val wanikaniService: WanikaniService,
     val deckId: UUID,
 ) {
-    @OptIn(ExperimentalTime::class)
     suspend fun getData(): DeckOverviewData {
-        val query = flashcardsService.query(DeckOverviewQuery.serializer(), "id" to deckId)
+        val query = flashcardsService.query(DeckOverviewQuery(deckId.toString()))
         val unadded = query.sources.toMutableList()
-        val added = mutableListOf<DeckOverviewQuery.CardSource>()
+        val added = mutableListOf<DeckOverviewQueryResponse.CardSource>()
         for (sourceId in query.deck.sourceIds) {
             added.add(unadded.removeFirst { it.id == sourceId })
         }
         val lessons = added.sumOf {
             when (it) {
-                is DeckOverviewQuery.CardSource.CustomCardSource -> it.lessons
-                is DeckOverviewQuery.CardSource.WanikaniCardSource -> wanikaniService.forSource(it.id).getLessons().size
+                is DeckOverviewQueryResponse.CardSource.CustomCardSource -> it.lessons
+                is DeckOverviewQueryResponse.CardSource.WanikaniCardSource -> wanikaniService.forSource(it.id).getLessons().size
             }
         }
         val reviews = added.sumOf {
             when (it) {
-                is DeckOverviewQuery.CardSource.CustomCardSource -> it.reviews
-                is DeckOverviewQuery.CardSource.WanikaniCardSource -> wanikaniService.forSource(it.id).getReviews().size
+                is DeckOverviewQueryResponse.CardSource.CustomCardSource -> it.reviews
+                is DeckOverviewQueryResponse.CardSource.WanikaniCardSource -> wanikaniService.forSource(it.id).getReviews().size
             }
         }
         val reviewForecast = mutableMapOf<Instant, Int>()
@@ -47,8 +44,8 @@ class DeckOverviewModel(
         val oneWeek = now + 7.days
         for (source in added) {
             val forecast = when (source) {
-                is DeckOverviewQuery.CardSource.CustomCardSource -> source.reviewForecast.associate { it.time to it.count }
-                is DeckOverviewQuery.CardSource.WanikaniCardSource -> wanikaniService.forSource(source.id).getReviewForecast()
+                is DeckOverviewQueryResponse.CardSource.CustomCardSource -> source.reviewForecast.associate { it.time to it.count }
+                is DeckOverviewQueryResponse.CardSource.WanikaniCardSource -> wanikaniService.forSource(source.id).getReviewForecast()
             }.filter { (k, _) -> k > now && k <= oneWeek }
             reviewForecast.merge(forecast) { a, b -> a + b }
         }
@@ -119,9 +116,30 @@ class SourceView(val name: String, val id: UUID) {
 }
 class ReviewForecastEntry(val time: Instant, val count: Int, val total: Int)
 
+class DeckOverviewQuery(id: String) : GraphQLQuery<DeckOverviewQueryResponse> {
+    override val queryString: String = """
+        query(${'$'}id: String!) {
+          deck(id: ${'$'}id) { name sourceIds }
+          sources {
+            type: __typename
+            name
+            id
+            ... on CustomCardSource {
+              lessons
+              reviews
+              reviewForecast { time count }
+            }
+          }
+        }
+    """.trimIndent()
+
+    override val responseDeserializer get() = DeckOverviewQueryResponse.serializer()
+
+    override val variables = mapOf("id" to id)
+}
+
 @Serializable
-@GraphQLVariable("id", "String!")
-class DeckOverviewQuery(@GraphQLArgument("id", "\$id") val deck: Deck, val sources: List<CardSource>) {
+class DeckOverviewQueryResponse(val deck: Deck, val sources: List<CardSource>) {
     @Serializable
     data class Deck(val name: String, val sourceIds: List<UUID>)
     @Serializable

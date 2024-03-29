@@ -5,13 +5,13 @@ package review
 import FlashcardsService
 import WanikaniService
 import flashcards.api.v1.ReviewRequest
+import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers
 import multiplatform.UUID
 import multiplatform.UUIDSerializer
-import multiplatform.graphql.GraphQLArgument
-import multiplatform.graphql.GraphQLVariable
+import multiplatform.graphql.GraphQLQuery
 import wanikani.toCardGroup
 
 class ReviewModel(
@@ -20,7 +20,7 @@ class ReviewModel(
     private val deckId: UUID,
 ) {
     suspend fun getItems(): List<Reviewer.ReviewItem> {
-        val sources = flashcardsService.query(Query.serializer(), "id" to deckId).deck.sources
+        val sources = flashcardsService.query(Query(deckId)).deck.sources
         return sources.flatMap { source ->
             when(source) {
                 is CardSource.CustomCardSource -> source.reviewItems
@@ -58,9 +58,34 @@ class ReviewModel(
         }
     }
 
+    private class Query(id: UUID) : GraphQLQuery<QueryResponse> {
+        override val queryString = """
+            query(${'$'}id: String!) {
+                deck(id: ${'$'}id) {
+                    sources {
+                        type: __typename
+                        ... on WanikaniCardSource { id name }
+                        ... on CustomCardSource {
+                            reviewItems {
+                                source { id name __typename }
+                                cardGroup {
+                                    iid
+                                    cards { front back prompt synonyms blockList closeList notes }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        """.trimIndent()
+
+        override val variables = mapOf("id" to id.toString())
+
+        override val responseDeserializer = QueryResponse.serializer()
+    }
+
     @Serializable
-    @GraphQLVariable("id", "String!")
-    private class Query(@GraphQLArgument("id", "\$id") val deck: Deck)
+    private class QueryResponse(val deck: Deck)
     @Serializable
     class Deck(val sources: List<CardSource>)
     @Serializable

@@ -1,6 +1,6 @@
 package flashcards
 
-import auth.ValidatedToken
+import auth.ktor.ValidatedToken
 import flashcards.db.AccountDao
 import flashcards.db.Database
 import java.util.*

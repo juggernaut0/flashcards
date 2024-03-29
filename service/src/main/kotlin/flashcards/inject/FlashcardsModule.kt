@@ -28,7 +28,7 @@ class FlashcardsModule(private val config: FlashcardsConfig) {
     }
 
     @Provides
-    fun appConfig(): AppConfig = config.app
+    fun config(): FlashcardsConfig = config
 
     @Provides
     fun connectionFactory(): ConnectionFactory {

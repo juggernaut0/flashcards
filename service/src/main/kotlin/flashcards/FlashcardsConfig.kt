@@ -8,7 +8,7 @@ class FlashcardsConfig(
 
 class AppConfig(val port: Int)
 
-class AuthConfig(val host: String, val port: Int? = null)
+class AuthConfig(val host: String, val port: Int? = null, val mock: Boolean = false)
 
 class DataConfig(
         val user: String,

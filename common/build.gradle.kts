@@ -8,7 +8,7 @@ plugins {
 
 kotlin {
     jvm()
-    js(LEGACY) {
+    js(IR) {
         browser()
     }
 
@@ -21,7 +21,7 @@ kotlin {
 
         val commonMain by getting {
             dependencies {
-                api("com.github.juggernaut0:multiplatform-utils-graphql:${libs.versions.multiplatform.utils.get()}")
+                api("com.github.juggernaut0:multiplatform-utils-graphql:${libs.versions.multiplatformUtils.get()}")
                 api("org.jetbrains.kotlinx:kotlinx-datetime:0.4.0")
             }
         }

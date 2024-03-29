@@ -3,13 +3,13 @@ package flashcards.api.v1
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
+import multiplatform.IntAsStringSerializer
 import multiplatform.UUID
 import multiplatform.UUIDSerializer
 import multiplatform.api.ApiRoute
 import multiplatform.api.Method
 import multiplatform.api.pathOf
-import multiplatform.graphql.GraphQLRequest
-import multiplatform.graphql.GraphQLResponse
+import multiplatform.graphql.GraphQLApiRoute
 
 @Serializable
 data class IdParam(@Serializable(with = UUIDSerializer::class) val id: UUID)
@@ -18,7 +18,7 @@ data class IdParam(@Serializable(with = UUIDSerializer::class) val id: UUID)
 data class ReviewParam(@Serializable(with = UUIDSerializer::class) val sourceId: UUID, @Serializable(with = IntAsStringSerializer::class) val iid: Int)
 
 const val APP_CONTEXT = "/flashcards"
-val query = ApiRoute(Method.POST, pathOf(Unit.serializer(), "$APP_CONTEXT/graphql"), GraphQLResponse.serializer(), GraphQLRequest.serializer())
+val query = GraphQLApiRoute(pathOf(Unit.serializer(), "$APP_CONTEXT/graphql"))
 val createSource = ApiRoute(Method.POST, pathOf(Unit.serializer(), "$APP_CONTEXT/api/v1/sources"), UUIDSerializer, CardSourceRequest.serializer())
 val reorderSources = ApiRoute(Method.PUT, pathOf(Unit.serializer(), "$APP_CONTEXT/api/v1/sources"), Unit.serializer(), ListSerializer(UUIDSerializer))
 val updateSource = ApiRoute(Method.PUT, pathOf(IdParam.serializer(), "$APP_CONTEXT/api/v1/sources/{id}"), Unit.serializer(), CardSourceRequest.serializer())

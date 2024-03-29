@@ -1,6 +1,6 @@
 package flashcards
 
-import auth.ValidatedToken
+import auth.ktor.ValidatedToken
 import flashcards.api.v1.*
 import flashcards.db.CardSourceDao
 import flashcards.db.Database

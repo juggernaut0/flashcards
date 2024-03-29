@@ -10,25 +10,26 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers
 import multiplatform.UUID
 import multiplatform.UUIDSerializer
+import multiplatform.graphql.GraphQLQuery
 
 class DashboardModel(
     private val flashcardsService: FlashcardsService,
     private val wanikaniService: WanikaniService,
 ) {
     suspend fun getData(): DashboardData {
-        val query = flashcardsService.query(DashboardQuery.serializer())
+        val query = flashcardsService.query(DashboardQuery())
         return DashboardData(
             decks = query.decks.map { deck ->
                 val lessons = deck.sources.sumOf {
                     when (it) {
-                        is DashboardQuery.DeckCardSource.CustomCardSource -> it.lessons
-                        is DashboardQuery.DeckCardSource.WanikaniCardSource -> wanikaniService.forSource(it.id).getLessons().size
+                        is DashboardQueryResponse.DeckCardSource.CustomCardSource -> it.lessons
+                        is DashboardQueryResponse.DeckCardSource.WanikaniCardSource -> wanikaniService.forSource(it.id).getLessons().size
                     }
                 }
                 val reviews = deck.sources.sumOf {
                     when (it) {
-                        is DashboardQuery.DeckCardSource.CustomCardSource -> it.reviews
-                        is DashboardQuery.DeckCardSource.WanikaniCardSource -> wanikaniService.forSource(it.id).getReviews().size
+                        is DashboardQueryResponse.DeckCardSource.CustomCardSource -> it.reviews
+                        is DashboardQueryResponse.DeckCardSource.WanikaniCardSource -> wanikaniService.forSource(it.id).getReviews().size
                     }
                 }
                 DashboardDeck(deck.id, deck.name, lessons, reviews)
@@ -68,8 +69,26 @@ class DashboardData(val decks: List<DashboardDeck>, val sources: List<DashboardS
 class DashboardDeck(val id: UUID, val name: String, val lessons: Int, val reviews: Int)
 class DashboardSource(val id: UUID, val name: String, val type: String, val error: Boolean)
 
+class DashboardQuery : GraphQLQuery<DashboardQueryResponse> {
+    override val queryString: String = """
+        {
+          decks {
+            id
+            name
+            sources {
+              type: __typename
+              ... on CustomCardSource { lessons reviews }
+              ... on WanikaniCardSource { id }
+            }
+          }
+          sources { id name __typename }
+        }
+    """.trimIndent()
+
+    override val responseDeserializer get() = DashboardQueryResponse.serializer()
+}
 @Serializable
-class DashboardQuery(val decks: List<Deck>, val sources: List<CardSource>) {
+class DashboardQueryResponse(val decks: List<Deck>, val sources: List<CardSource>) {
     @Serializable
     class Deck(val id: UUID, val name: String, val sources: List<DeckCardSource>)
     @Serializable

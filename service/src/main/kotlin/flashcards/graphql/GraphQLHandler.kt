@@ -1,6 +1,6 @@
 package flashcards.graphql
 
-import auth.ValidatedToken
+import auth.ktor.ValidatedToken
 import flashcards.AccountService
 import flashcards.SrsService
 import flashcards.api.v1.*

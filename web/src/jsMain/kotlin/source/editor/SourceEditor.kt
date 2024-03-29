@@ -18,8 +18,7 @@ import kui.Props
 import kui.classes
 import multiplatform.UUID
 import multiplatform.UUIDSerializer
-import multiplatform.graphql.GraphQLArgument
-import multiplatform.graphql.GraphQLVariable
+import multiplatform.graphql.GraphQLQuery
 
 class SourceEditor(private val service: FlashcardsService, private val wanikaniService: WanikaniService, private val sourceId: UUID) : Component() {
     private var source: CardSource? = null
@@ -29,7 +28,7 @@ class SourceEditor(private val service: FlashcardsService, private val wanikaniS
 
     init {
         async {
-            val source = service.query(Query.serializer(), "id" to sourceId).source
+            val source = service.query(Query(sourceId)).source
             inner = when(source) {
                 is CardSource.CustomCardSource -> CustomSourceEditor(service, source, ::makeDirty)
                 is CardSource.WanikaniCardSource -> WanikaniSourceEditor(wanikaniService, source)
@@ -92,9 +91,31 @@ class SourceEditor(private val service: FlashcardsService, private val wanikaniS
         abstract fun toRequest(): CardSourceRequest
     }
 
+    private class Query(id: UUID) : GraphQLQuery<Response> {
+        override val queryString: String = """
+            query (${'$'}id: String!) {
+                source(id: ${'$'}id) {
+                    type: __typename
+                    name id
+                    ... on CustomCardSource {
+                        groups {
+                            iid srsStage lastReviewed nextReview
+                            cards { front back prompt synonyms blockList closeList notes }
+                        }
+                    }
+                }
+            }
+        """.trimIndent()
+
+        override val variables = mapOf(
+            "id" to id.toString()
+        )
+
+        override val responseDeserializer = Response.serializer()
+    }
+
     @Serializable
-    @GraphQLVariable("id", "String!")
-    private class Query(@GraphQLArgument("id", "\$id") val source: CardSource)
+    private class Response(val source: CardSource)
 
     @Serializable
     sealed class CardSource {

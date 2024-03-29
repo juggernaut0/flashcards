@@ -3,13 +3,14 @@ import flashcards.api.v1.*
 import kotlinx.serialization.KSerializer
 import multiplatform.UUID
 import multiplatform.api.*
+import multiplatform.graphql.GraphQLQuery
 import multiplatform.graphql.callGraphQL
 
 class FlashcardsService {
     private val client = AuthorizedClient(FetchClient())
 
-    suspend fun <T> query(ser: KSerializer<T>, vararg variables: Pair<String, Any>): T {
-        return client.callGraphQL(query, ser, variables = variables.toMap())
+    suspend fun <T> query(q: GraphQLQuery<T>): T {
+        return client.callGraphQL(query, q)
     }
 
     suspend fun createSource(sourceRequest: CardSourceRequest): UUID {

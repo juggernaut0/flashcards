@@ -1,6 +1,6 @@
 package flashcards
 
-import auth.token
+import auth.ktor.token
 import flashcards.graphql.GraphQLHandler
 import flashcards.graphql.registerRoutes
 import io.ktor.client.*
@@ -22,10 +22,10 @@ class FlashcardsApp @Inject constructor(
     private val apiHandler: ApiHandler,
     private val graphQLHandler: GraphQLHandler,
     @Named("authClient") private val authClient: HttpClient,
-    private val config: AppConfig
+    private val config: FlashcardsConfig,
 ) {
     fun start() {
-        embeddedServer(Jetty, config.port) {
+        embeddedServer(Jetty, config.app.port) {
             install(CallLogging) {
                 level = Level.INFO
             }
@@ -38,6 +38,9 @@ class FlashcardsApp @Inject constructor(
             routing {
                 registerRoutes(apiHandler)
                 registerRoutes(graphQLHandler)
+                if (config.auth.mock) {
+                    mockAuthRoutes()
+                }
                 get("flashcards") { call.respondRedirect("flashcards/", permanent = true) }
                 route("flashcards/") {
                     staticBasePackage = "static"

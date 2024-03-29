@@ -5,13 +5,13 @@ package lesson
 import FlashcardsService
 import WanikaniService
 import flashcards.api.v1.ReviewRequest
+import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers
 import multiplatform.UUID
 import multiplatform.UUIDSerializer
-import multiplatform.graphql.GraphQLArgument
-import multiplatform.graphql.GraphQLVariable
+import multiplatform.graphql.GraphQLQuery
 import review.Reviewer
 import wanikani.toCardGroup
 
@@ -21,19 +21,19 @@ class LessonModel(
     private val deckId: UUID,
 ) {
     suspend fun getData(): LessonScreenData {
-        val deck = flashcardsService.query(LessonScreenQuery.serializer(), "id" to deckId).deck
+        val deck = flashcardsService.query(LessonScreenQuery(deckId)).deck
         val totalLessons = deck.sources.sumOf {
             when (it) {
-                is LessonScreenQuery.CardSource.CustomCardSource -> it.lessons
-                is LessonScreenQuery.CardSource.WanikaniCardSource -> wanikaniService.forSource(it.id).getLessons().size
+                is LessonScreenQueryResponse.CardSource.CustomCardSource -> it.lessons
+                is LessonScreenQueryResponse.CardSource.WanikaniCardSource -> wanikaniService.forSource(it.id).getLessons().size
             }
         }
         // TODO number of items based on deck settings
         val items = deck.sources
             .flatMapTake(totalLessons.coerceAtMost(5)) { source ->
                 when(source) {
-                    is LessonScreenQuery.CardSource.CustomCardSource -> getCustomLessons(source.id)
-                    is LessonScreenQuery.CardSource.WanikaniCardSource -> {
+                    is LessonScreenQueryResponse.CardSource.CustomCardSource -> getCustomLessons(source.id)
+                    is LessonScreenQueryResponse.CardSource.WanikaniCardSource -> {
                         val wkAccount = wanikaniService.forSource(source.id)
                         val itemSource = Reviewer.Source(source.id, source.name, "WanikaniCardSource")
                         wkAccount.getLessons().mapNotNull { assignment ->
@@ -62,9 +62,9 @@ class LessonModel(
     }
 
     private suspend fun getCustomLessons(sourceId: UUID): List<Reviewer.ReviewItem> {
-        return flashcardsService.query(LessonItemQuery.serializer(), "sourceId" to sourceId)
+        return flashcardsService.query(LessonItemQuery(sourceId))
             .source
-            .let { it as LessonItemQuery.CardSource.CustomCardSource }
+            .let { it as LessonItemQueryResponse.CardSource.CustomCardSource }
             .lessonItems
     }
 
@@ -87,9 +87,28 @@ class LessonModel(
 
 class LessonScreenData(val totalLessons: Int, val items: List<Reviewer.ReviewItem>)
 
+class LessonScreenQuery(id: UUID) : GraphQLQuery<LessonScreenQueryResponse> {
+    override val queryString = """
+        query(${'$'}id: String!) {
+            deck(id: ${'$'}id) {
+                sources {
+                    id
+                    type: __typename
+                    ... on CustomCardSource { lessons }
+                    ... on WanikaniCardSource { name }
+                }
+            }
+        }
+    """.trimIndent()
+
+    override val variables = mapOf("id" to id.toString())
+
+    override val responseDeserializer = LessonScreenQueryResponse.serializer()
+
+}
+
 @Serializable
-@GraphQLVariable("id", "String!")
-class LessonScreenQuery(@GraphQLArgument("id", "\$id") val deck: Deck) {
+class LessonScreenQueryResponse(val deck: Deck) {
     @Serializable
     class Deck(val sources: List<CardSource>)
     @Serializable
@@ -104,9 +123,31 @@ class LessonScreenQuery(@GraphQLArgument("id", "\$id") val deck: Deck) {
     }
 }
 
+class LessonItemQuery(sourceId: UUID) : GraphQLQuery<LessonItemQueryResponse> {
+    override val queryString = """
+        query(${'$'}sourceId: String!) {
+            source(id: ${'$'}sourceId) {
+                type: __typename
+                ... on CustomCardSource {
+                    lessonItems {
+                        source { id name __typename }
+                        cardGroup {
+                            iid
+                            cards { front back prompt synonyms blockList closeList notes }
+                        }
+                    }
+                }
+            }
+        }
+    """.trimIndent()
+
+    override val variables: Map<String, Any?> = mapOf("sourceId" to sourceId.toString())
+
+    override val responseDeserializer = LessonItemQueryResponse.serializer()
+}
+
 @Serializable
-@GraphQLVariable("sourceId", "String!")
-class LessonItemQuery(@GraphQLArgument("id", "\$sourceId")  val source: CardSource) {
+class LessonItemQueryResponse(val source: CardSource) {
     @Serializable
     sealed class CardSource {
         @Serializable
